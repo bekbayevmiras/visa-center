@@ -55,8 +55,10 @@ export function StepDocuments({
 
     try {
       const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      const userId = user?.id ?? 'anonymous'
       const ext = file.name.split('.').pop()
-      const path = `temp/${Date.now()}_${key}.${ext}`
+      const path = `${userId}/temp/${Date.now()}_${key}.${ext}`
       const { error } = await supabase.storage.from('documents').upload(path, file, { upsert: true })
 
       if (error) throw error
