@@ -20,21 +20,24 @@ const TEAM = [
     name: 'Айгерим Нурланова',
     role: 'Руководитель',
     bio: '8 лет в визовом бизнесе. Специалист по консульским отношениям, прошла стажировку в европейских посольствах. Основала VisaKZ с целью сделать путешествия доступными каждому казахстанцу.',
-    emoji: '👩‍💼',
+    initials: 'АН',
+    color: 'bg-violet-500',
     badge: '8 лет опыта',
   },
   {
     name: 'Данияр Сейтов',
     role: 'Главный менеджер',
     bio: 'Специалист по Шенгенской зоне, США и Великобритании. Лично оформил более 600 виз. Знает требования каждого консульства наизусть и помогает клиентам с самыми сложными случаями.',
-    emoji: '👨‍💼',
+    initials: 'ДС',
+    color: 'bg-emerald-500',
     badge: 'Эксперт по Шенгену',
   },
   {
-    name: 'Аида (AI)',
+    name: 'Аида — AI-ассистент',
     role: 'Виртуальный ассистент',
-    bio: 'Работает 24/7. Отвечает на вопросы в WhatsApp и Telegram, проверяет документы за 30 секунд, отправляет уведомления о статусе заявки и никогда не уходит в отпуск.',
-    emoji: '🤖',
+    bio: 'Работает 24/7. Отвечает на вопросы в WhatsApp, проверяет документы за 30 секунд, отправляет уведомления о статусе заявки и никогда не уходит в отпуск.',
+    initials: 'AI',
+    color: 'bg-primary',
     badge: 'Работает 24/7',
   },
 ]
@@ -156,8 +159,8 @@ export default function AboutPage() {
                 className="rounded-2xl border border-border bg-background p-6 flex flex-col gap-4"
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-4xl">
-                    {member.emoji}
+                  <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${member.color} text-white text-xl font-bold`}>
+                    {member.initials}
                   </div>
                   <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                     {member.badge}

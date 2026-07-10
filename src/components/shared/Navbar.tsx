@@ -51,8 +51,8 @@ export function Navbar() {
             <Button variant="ghost" size="sm">Войти</Button>
           </Link>
           <Link href="/apply">
-            <Button size="sm" className="bg-primary hover:bg-primary/90 text-white">
-              Подать заявку
+            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              Оформить визу →
             </Button>
           </Link>
         </div>
@@ -89,7 +89,7 @@ export function Navbar() {
               <Button variant="outline" className="w-full">Войти</Button>
             </Link>
             <Link href="/apply" onClick={() => setOpen(false)}>
-              <Button className="w-full bg-primary text-white">Подать заявку</Button>
+              <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">Оформить визу →</Button>
             </Link>
           </div>
         </div>

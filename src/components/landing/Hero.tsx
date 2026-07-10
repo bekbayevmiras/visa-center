@@ -9,21 +9,22 @@ function getUrgencyText(): string {
   const month = new Date().getMonth() // 0-11
   if (month === 2 || month === 3) return '🔥 Апрель — пиковый сезон. Запись ограничена.'
   if (month === 4 || month === 5) return '☀️ Летний сезон начался. Подайте заявку заранее.'
-  if (month === 6 || month === 7) return '✈️ Август — высокий сезон. Осталось мест: 8.'
-  if (month === 8 || month === 9) return '🍂 Октябрь — деловой сезон. Записывайтесь сейчас.'
-  if (month === 10 || month === 11) return '🎄 Новогодние туры. Оформите визу до 20 декабря.'
+  if (month === 6) return '☀️ Июль — высокий сезон. Запись ограничена.'
+  if (month === 7) return '✈️ Август — высокий сезон. Запись ограничена.'
+  if (month === 8 || month === 9) return '🍂 Деловой сезон. Записывайтесь сейчас.'
+  if (month === 10 || month === 11) return '🎄 Новогодние туры. Оформите визу заранее.'
   return '❄️ Зимний сезон. Начните оформление заранее.'
 }
 
 const POPULAR_COUNTRIES = [
-  { code: 'de', name: 'Германия', flag: '🇩🇪', price: 35000, days: 10 },
-  { code: 'fr', name: 'Франция', flag: '🇫🇷', price: 35000, days: 10 },
-  { code: 'us', name: 'США', flag: '🇺🇸', price: 80000, days: 60 },
-  { code: 'ae', name: 'ОАЭ', flag: '🇦🇪', price: 20000, days: 3 },
-  { code: 'tr', name: 'Турция', flag: '🇹🇷', price: 15000, days: 1 },
-  { code: 'th', name: 'Таиланд', flag: '🇹🇭', price: 15000, days: 3 },
-  { code: 'jp', name: 'Япония', flag: '🇯🇵', price: 30000, days: 5 },
-  { code: 'kr', name: 'Корея', flag: '🇰🇷', price: 25000, days: 5 },
+  { code: 'de', name: 'Германия', flag: '🇩🇪', price: 28000, days: 10 },
+  { code: 'fr', name: 'Франция', flag: '🇫🇷', price: 28000, days: 10 },
+  { code: 'us', name: 'США', flag: '🇺🇸', price: 64000, days: 60 },
+  { code: 'ae', name: 'ОАЭ', flag: '🇦🇪', price: 16000, days: 3 },
+  { code: 'tr', name: 'Турция', flag: '🇹🇷', price: 12000, days: 1 },
+  { code: 'th', name: 'Таиланд', flag: '🇹🇭', price: 12000, days: 3 },
+  { code: 'jp', name: 'Япония', flag: '🇯🇵', price: 24000, days: 5 },
+  { code: 'ge', name: 'Грузия', flag: '🇬🇪', price: 8000, days: 1 },
 ]
 
 const TRUST_ITEMS = [

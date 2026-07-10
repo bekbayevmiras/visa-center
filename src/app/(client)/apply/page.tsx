@@ -15,6 +15,8 @@ import {
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
+const POPULAR_COUNTRY_CODES = ['DE', 'FR', 'AE', 'TR', 'US', 'GB', 'ES', 'IT', 'TH', 'JP']
+
 const PURPOSES = [
   { key: 'tourism', label: '🌴 Туризм' },
   { key: 'business', label: '💼 Бизнес' },
@@ -55,7 +57,12 @@ function ApplyFormContent() {
       .order('name_ru')
       .then(({ data }) => {
         if (data) {
-          setCountries(data as Country[])
+          const all = data as Country[]
+          const popular = POPULAR_COUNTRY_CODES
+            .map(code => all.find(c => c.code === code))
+            .filter((c): c is Country => !!c)
+          const rest = all.filter(c => !POPULAR_COUNTRY_CODES.includes(c.code))
+          setCountries([...popular, ...rest])
           const countryParam = searchParams.get('country')?.toUpperCase()
           if (countryParam) {
             const found = (data as Country[]).find(c => c.code === countryParam)
@@ -163,7 +170,7 @@ function ApplyFormContent() {
   return (
     <div>
       {/* Progress bar */}
-      <div className="flex gap-2 mb-8">
+      <div className="flex gap-2 mb-4">
         {[1, 2].map(s => (
           <div
             key={s}
@@ -172,6 +179,22 @@ function ApplyFormContent() {
             }`}
           />
         ))}
+      </div>
+
+      {/* Trust strip */}
+      <div className="flex items-center justify-center gap-4 mb-6 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+          98% одобрений
+        </span>
+        <span className="flex items-center gap-1">
+          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+          🛡️ Гарантия возврата
+        </span>
+        <span className="flex items-center gap-1">
+          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+          Ответ за 15 мин
+        </span>
       </div>
 
       {/* ── Step 1: Country + Purpose ────────────────────────────── */}

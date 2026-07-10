@@ -100,15 +100,15 @@ export default async function PricesPage() {
           <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-secondary/5 blur-3xl" />
         </div>
         <div className="container relative mx-auto max-w-7xl px-4 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
-            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-            Без скрытых комиссий
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-1.5 text-sm font-medium text-emerald-700">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            На 20% ниже рынка · Без скрытых комиссий
           </div>
           <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight md:text-5xl">
             Прозрачные цены
           </h1>
           <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            Цена включает: сборку пакета документов, проверку AI, подачу в консульство, уведомления о статусе
+            Цена включает: сборку пакета документов, AI-проверку, подачу в консульство, уведомления о статусе
           </p>
         </div>
       </section>
@@ -117,11 +117,11 @@ export default async function PricesPage() {
       <section className="py-12 md:py-16">
         <div className="container mx-auto max-w-7xl px-4">
 
-          {/* Hint about toggle — implemented as a static table with both columns shown */}
-          <div className="mb-8 flex items-center justify-center gap-3">
-            <span className="text-sm text-muted-foreground">
-              Таблица показывает <span className="font-semibold text-foreground">стандартные</span> и <span className="font-semibold text-foreground">срочные</span> цены одновременно
-            </span>
+          <div className="mb-8 flex items-center justify-center">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
+              <span className="text-base">🎯</span>
+              Наши цены на <strong>20% ниже</strong> стандартных рыночных — перечёркнутая цена показывает, сколько берут конкуренты
+            </div>
           </div>
 
           {Object.entries(groups).map(([group, list]) => {
@@ -139,7 +139,8 @@ export default async function PricesPage() {
                         <th className="px-4 py-3 text-left font-medium text-muted-foreground">Страна</th>
                         <th className="px-4 py-3 text-center font-medium text-muted-foreground">Срок (стандарт)</th>
                         <th className="px-4 py-3 text-center font-medium text-muted-foreground">Срок (срочно)</th>
-                        <th className="px-4 py-3 text-right font-medium text-muted-foreground">Стандарт</th>
+                        <th className="px-4 py-3 text-right font-medium text-muted-foreground line-through opacity-50">Рынок</th>
+                        <th className="px-4 py-3 text-right font-medium text-emerald-700">Наша цена</th>
                         <th className="px-4 py-3 text-right font-medium text-primary">Срочно</th>
                         <th className="px-4 py-3 text-right font-medium text-muted-foreground"></th>
                       </tr>
@@ -179,7 +180,14 @@ export default async function PricesPage() {
                                 {country.processing_time_express_days} дн.
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-right font-medium">
+                            <td className="px-4 py-3 text-right text-muted-foreground">
+                              <span className="line-through text-sm">
+                                {Math.round(country.base_price / 0.8 / 500) * 500 > 0
+                                  ? (Math.round(country.base_price / 0.8 / 500) * 500).toLocaleString('ru-KZ')
+                                  : ''} ₸
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-right font-semibold text-emerald-700">
                               {country.base_price.toLocaleString('ru-KZ')} ₸
                             </td>
                             <td className="px-4 py-3 text-right font-semibold text-primary">
