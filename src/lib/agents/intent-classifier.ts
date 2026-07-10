@@ -61,7 +61,10 @@ export async function classifyIntent(
     messages,
   })
 
-  const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
+  const raw = response.content[0].type === 'text' ? response.content[0].text : '{}'
+
+  // Strip markdown code fences if Claude wrapped the JSON
+  const text = raw.replace(/```(?:json)?\n?/g, '').trim()
 
   try {
     const parsed = JSON.parse(text) as { intent: Intent; country?: string | null; confidence: number }
@@ -71,7 +74,19 @@ export async function classifyIntent(
       confidence: parsed.confidence ?? 0.5,
     }
   } catch {
-    console.error('classifyIntent parse error, raw:', text)
+    // Try to extract JSON object from anywhere in the text
+    const match = text.match(/\{[\s\S]*\}/)
+    if (match) {
+      try {
+        const parsed = JSON.parse(match[0]) as { intent: Intent; country?: string | null; confidence: number }
+        return {
+          intent: parsed.intent ?? 'unknown',
+          country: parsed.country ?? undefined,
+          confidence: parsed.confidence ?? 0.5,
+        }
+      } catch { /* fall through */ }
+    }
+    console.error('classifyIntent parse error, raw:', raw)
     return { intent: 'unknown', confidence: 0 }
   }
 }
