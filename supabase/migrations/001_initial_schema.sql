@@ -181,7 +181,7 @@ CREATE TABLE public.application_history (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Auto-log status changes
+-- Auto-log status changes (SECURITY DEFINER so it can write past RLS)
 CREATE OR REPLACE FUNCTION log_application_status_change()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -191,7 +191,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE TRIGGER application_status_change
   AFTER UPDATE ON public.applications
@@ -350,6 +350,7 @@ CREATE INDEX idx_analytics_events_created_at ON public.analytics_events(created_
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.application_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
@@ -372,7 +373,13 @@ $$ LANGUAGE sql SECURITY DEFINER;
 
 -- Users: see own profile, admins see all
 CREATE POLICY "users_select_own" ON public.users FOR SELECT USING (id = auth.uid() OR public.is_admin());
-CREATE POLICY "users_update_own" ON public.users FOR UPDATE USING (id = auth.uid());
+CREATE POLICY "users_update_own" ON public.users FOR UPDATE
+  USING (id = auth.uid())
+  WITH CHECK (
+    id = auth.uid()
+    AND is_admin = (SELECT is_admin FROM public.users WHERE id = auth.uid())
+    AND is_vip   = (SELECT is_vip   FROM public.users WHERE id = auth.uid())
+  );
 CREATE POLICY "users_insert_own" ON public.users FOR INSERT WITH CHECK (id = auth.uid());
 
 -- Applications: see own, admins see all
@@ -387,7 +394,10 @@ CREATE POLICY "documents_update" ON public.documents FOR UPDATE USING (user_id =
 
 -- Messages: see own, admins see all
 CREATE POLICY "messages_select" ON public.messages FOR SELECT USING (user_id = auth.uid() OR public.is_admin());
-CREATE POLICY "messages_insert" ON public.messages FOR INSERT WITH CHECK (auth.uid() IS NOT NULL OR public.is_admin());
+CREATE POLICY "messages_insert" ON public.messages FOR INSERT WITH CHECK (
+  (user_id = auth.uid() AND sent_by IN ('client', 'user'))
+  OR public.is_admin()
+);
 
 -- Payments: see own, admins see all
 CREATE POLICY "payments_select" ON public.payments FOR SELECT USING (user_id = auth.uid() OR public.is_admin());
@@ -398,7 +408,16 @@ CREATE POLICY "countries_admin_write" ON public.countries FOR ALL USING (public.
 CREATE POLICY "visa_types_public_read" ON public.visa_types FOR SELECT USING (TRUE);
 CREATE POLICY "visa_types_admin_write" ON public.visa_types FOR ALL USING (public.is_admin());
 
--- Leads: admin only
+-- Application history: owner can read (via join), admins see all; writes only via SECURITY DEFINER trigger
+CREATE POLICY "history_select_own" ON public.application_history FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM public.applications a
+    WHERE a.id = application_history.application_id
+      AND (a.user_id = auth.uid() OR public.is_admin())
+  )
+);
+
+-- Leads: admin only (CTA inserts go through /api/leads server route with service_role)
 CREATE POLICY "leads_admin_only" ON public.leads FOR ALL USING (public.is_admin());
 
 -- Content & campaigns: admin only
@@ -407,8 +426,8 @@ CREATE POLICY "campaigns_admin" ON public.campaigns FOR ALL USING (public.is_adm
 CREATE POLICY "message_templates_admin" ON public.message_templates FOR ALL USING (public.is_admin());
 CREATE POLICY "settings_admin" ON public.settings FOR ALL USING (public.is_admin());
 
--- Analytics: insert for all auth users, read for admins
-CREATE POLICY "analytics_insert" ON public.analytics_events FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+-- Analytics: insert for auth users (own events only), read for admins
+CREATE POLICY "analytics_insert" ON public.analytics_events FOR INSERT WITH CHECK (user_id = auth.uid() OR auth.uid() IS NOT NULL);
 CREATE POLICY "analytics_select_admin" ON public.analytics_events FOR SELECT USING (public.is_admin());
 
 -- ============================================================

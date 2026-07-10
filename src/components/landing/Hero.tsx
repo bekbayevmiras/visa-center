@@ -25,13 +25,16 @@ const TRUST_ITEMS = [
 export function Hero() {
   const router = useRouter()
   const [selected, setSelected] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
 
   const handleSelect = (code: string) => {
     setSelected(code)
+    setQuery('')
   }
 
   const handleApply = () => {
-    if (selected) router.push(`/apply?country=${selected}`)
+    const country = selected ?? query.trim().toLowerCase().replace(/\s+/g, '-')
+    if (country) router.push(`/apply?country=${encodeURIComponent(country)}`)
     else router.push('/apply')
   }
 
@@ -93,23 +96,28 @@ export function Hero() {
               ))}
             </div>
 
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <form
+              className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center"
+              onSubmit={e => { e.preventDefault(); handleApply() }}
+            >
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Или введите страну..."
+                  value={query}
+                  onChange={e => { setQuery(e.target.value); setSelected(null) }}
                   className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <Button
-                onClick={handleApply}
+                type="submit"
                 className="bg-primary text-white hover:bg-primary/90 h-10 px-6 shrink-0"
               >
                 Подать заявку
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-            </div>
+            </form>
           </div>
         </div>
       </div>

@@ -27,24 +27,27 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
+  const redirect = (path: string) => {
+    const res = NextResponse.redirect(new URL(path, request.url))
+    supabaseResponse.cookies.getAll().forEach(({ name, value, ...opts }) =>
+      res.cookies.set(name, value, opts)
+    )
+    return res
+  }
+
   // Protect client routes
   if (pathname.startsWith('/dashboard') || pathname.startsWith('/apply') || pathname.startsWith('/applications') || pathname.startsWith('/profile') || pathname.startsWith('/chat')) {
-    if (!user) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
+    if (!user) return redirect('/login')
   }
 
   // Protect admin routes
   if (pathname.startsWith('/admin')) {
-    if (!user) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-    // Admin check happens at page level via Supabase query
+    if (!user) return redirect('/login')
   }
 
   // Redirect logged-in users away from auth pages
   if (user && (pathname === '/login' || pathname === '/register')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return redirect('/dashboard')
   }
 
   return supabaseResponse
