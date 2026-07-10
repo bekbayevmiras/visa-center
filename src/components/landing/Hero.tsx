@@ -5,6 +5,16 @@ import { useRouter } from 'next/navigation'
 import { Search, ArrowRight, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
+function getUrgencyText(): string {
+  const month = new Date().getMonth() // 0-11
+  if (month === 2 || month === 3) return '🔥 Апрель — пиковый сезон. Запись ограничена.'
+  if (month === 4 || month === 5) return '☀️ Летний сезон начался. Подайте заявку заранее.'
+  if (month === 6 || month === 7) return '✈️ Август — высокий сезон. Осталось мест: 8.'
+  if (month === 8 || month === 9) return '🍂 Октябрь — деловой сезон. Записывайтесь сейчас.'
+  if (month === 10 || month === 11) return '🎄 Новогодние туры. Оформите визу до 20 декабря.'
+  return '❄️ Зимний сезон. Начните оформление заранее.'
+}
+
 const POPULAR_COUNTRIES = [
   { code: 'de', name: 'Германия', flag: '🇩🇪', price: 35000, days: 10 },
   { code: 'fr', name: 'Франция', flag: '🇫🇷', price: 35000, days: 10 },
@@ -60,9 +70,9 @@ export function Hero() {
 
   return (
     <>
-      {/* Urgency banner */}
+      {/* Urgency banner — dynamic by season */}
       <div className="w-full bg-amber-500/10 border-b border-amber-500/20 py-2 text-center text-sm font-medium text-amber-700">
-        🔥 Апрель/Май — пиковый сезон. Запись ограничена.
+        {getUrgencyText()}
       </div>
 
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-16 md:py-24">

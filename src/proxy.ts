@@ -35,12 +35,9 @@ export async function proxy(request: NextRequest) {
     return res
   }
 
-  // Protect client routes
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/apply') || pathname.startsWith('/applications') || pathname.startsWith('/profile') || pathname.startsWith('/chat')) {
-    if (!user) {
-      const isApply = pathname.startsWith('/apply')
-      return redirect(isApply ? '/login?from=apply' : '/login')
-    }
+  // Protect client routes (/apply is now public — simple lead form)
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/applications') || pathname.startsWith('/profile') || pathname.startsWith('/chat')) {
+    if (!user) return redirect('/login')
   }
 
   // Protect admin routes

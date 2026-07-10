@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { ArrowRight, ArrowLeft, Minus, Plus, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ApplyFormData } from '@/app/(client)/apply/page'
+import { ApplyFormData } from '@/components/client/apply/types'
 
 const detailsSchema = z.object({
   travel_date_from: z.string().min(1, 'Укажите дату вылета'),

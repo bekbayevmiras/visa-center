@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Search, Clock, ArrowRight, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
-import { ApplyFormData } from '@/app/(client)/apply/page'
+import { ApplyFormData } from '@/components/client/apply/types'
 
 type Country = {
   id: string

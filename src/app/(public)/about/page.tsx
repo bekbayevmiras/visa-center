@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'О нас — VisaKZ',
+  title: 'О нас',
   description: 'VisaKZ — визовый центр нового поколения в Алматы. Основан в 2023 году. Более 1200 виз оформлено, 98% одобрений.',
 }
 

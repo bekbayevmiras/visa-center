@@ -3,11 +3,16 @@ import { createAdminClient } from '@/lib/supabase/server'
 
 export async function POST(request: Request) {
   const body = await request.json()
-  const { name, phone, source, utm_source, utm_medium, utm_campaign } = body
+  const { name, phone, country, purpose, when_traveling, source, utm_source, utm_medium, utm_campaign } = body
 
   if (!name?.trim() || !phone?.trim()) {
     return NextResponse.json({ error: 'Заполните имя и телефон' }, { status: 400 })
   }
+
+  const notes = [
+    purpose && `Цель: ${purpose}`,
+    when_traveling && `Когда: ${when_traveling}`,
+  ].filter(Boolean).join('; ') || null
 
   const supabase = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,8 +21,10 @@ export async function POST(request: Request) {
     .insert({
       name: name.trim(),
       phone: phone.trim(),
+      country_interest: country ?? null,
       source: source ?? 'landing_cta',
       status: 'new',
+      notes,
       utm_source: utm_source ?? null,
       utm_medium: utm_medium ?? null,
       utm_campaign: utm_campaign ?? null,

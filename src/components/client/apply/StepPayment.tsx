@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight, CreditCard, Smartphone, Loader2, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ApplyFormData } from '@/app/(client)/apply/page'
+import { ApplyFormData } from '@/components/client/apply/types'
 import { createClient } from '@/lib/supabase/client'
 import { trackApplicationComplete } from '@/lib/analytics'
 

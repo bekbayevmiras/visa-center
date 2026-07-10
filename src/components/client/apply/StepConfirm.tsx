@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { CheckCircle, LayoutDashboard, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ApplyFormData } from '@/app/(client)/apply/page'
+import { ApplyFormData } from '@/components/client/apply/types'
 
 const STEPS_NEXT = [
   'Менеджер свяжется с вами в WhatsApp в течение 15 минут',

@@ -1,6 +1,7 @@
 import { Hero } from '@/components/landing/Hero'
 import { SocialProof } from '@/components/landing/SocialProof'
 import { HowItWorks } from '@/components/landing/HowItWorks'
+import { Testimonials } from '@/components/landing/Testimonials'
 import { CountryGrid } from '@/components/landing/CountryGrid'
 import { FAQ } from '@/components/landing/FAQ'
 import { CTASection } from '@/components/landing/CTASection'
@@ -48,6 +49,7 @@ export default function HomePage() {
       <Hero />
       <SocialProof />
       <HowItWorks />
+      <Testimonials />
       <CountryGrid />
       <FAQ />
       <CTASection />

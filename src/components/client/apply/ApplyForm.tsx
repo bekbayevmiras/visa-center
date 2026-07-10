@@ -8,7 +8,7 @@ import { StepDocuments } from '@/components/client/apply/StepDocuments'
 import { StepPayment } from '@/components/client/apply/StepPayment'
 import { StepConfirm } from '@/components/client/apply/StepConfirm'
 import { Check, Tag } from 'lucide-react'
-import { ApplyFormData } from '@/app/(client)/apply/page'
+import { ApplyFormData } from '@/components/client/apply/types'
 
 const STEPS = [
   { label: 'Направление' },

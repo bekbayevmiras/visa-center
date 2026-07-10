@@ -4,7 +4,7 @@ import { CheckCircle } from 'lucide-react'
 import { BlogIndex } from './BlogIndex'
 
 export const metadata: Metadata = {
-  title: 'Блог VisaKZ — советы по визам от экспертов',
+  title: 'Блог — советы по визам от экспертов',
   description: '1200+ оформленных виз. Делимся знаниями бесплатно. Советы по шенгену, США, ОАЭ, документам и многому другому.',
   openGraph: {
     title: 'Блог VisaKZ — советы по визам от экспертов',
