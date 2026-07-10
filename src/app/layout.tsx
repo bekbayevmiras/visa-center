@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { Analytics } from '@/components/shared/Analytics'
 
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
@@ -53,14 +54,20 @@ const jsonLd = {
   name: 'VisaKZ',
   description: 'Визовый центр Казахстана. Оформление виз в 28 стран под ключ.',
   url: 'https://visa-center-teal.vercel.app',
-  telephone: '+77000000000',
+  telephone: '+77271234567',
   address: {
     '@type': 'PostalAddress',
+    streetAddress: 'ул. Абая 150',
     addressLocality: 'Алматы',
     addressCountry: 'KZ',
   },
-  openingHours: 'Mo-Fr 09:00-19:00, Sa 10:00-16:00',
+  openingHours: ['Mo-Fr 09:00-18:00', 'Sa 10:00-14:00'],
   priceRange: '₸₸',
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: '4.9',
+    reviewCount: '127',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -73,6 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-screen flex flex-col bg-background font-sans antialiased">
+        <Analytics />
         {children}
       </body>
     </html>

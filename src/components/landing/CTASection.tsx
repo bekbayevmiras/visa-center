@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { MessageCircle, Phone } from 'lucide-react'
+import { trackLead } from '@/lib/analytics'
 
 export function CTASection() {
   const [form, setForm] = useState({ name: '', phone: '' })
@@ -10,6 +11,7 @@ export function CTASection() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    trackLead()
     await fetch('/api/leads', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

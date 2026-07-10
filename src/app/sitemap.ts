@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { ARTICLES } from './(public)/blog/page'
 
 const BASE_URL = 'https://visa-center-teal.vercel.app'
 
@@ -42,6 +43,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.5,
     },
+    {
+      url: `${BASE_URL}/blog`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
   ]
 
   const countryPages: MetadataRoute.Sitemap = countryCodes.map((code) => ({
@@ -51,5 +58,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }))
 
-  return [...staticPages, ...countryPages]
+  const blogArticlePages: MetadataRoute.Sitemap = ARTICLES.map((article) => ({
+    url: `${BASE_URL}/blog/${article.slug}`,
+    lastModified: new Date(article.publishedAt),
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+  }))
+
+  return [...staticPages, ...countryPages, ...blogArticlePages]
 }

@@ -4,6 +4,8 @@ import { HowItWorks } from '@/components/landing/HowItWorks'
 import { CountryGrid } from '@/components/landing/CountryGrid'
 import { FAQ } from '@/components/landing/FAQ'
 import { CTASection } from '@/components/landing/CTASection'
+import { LiveActivity } from '@/components/landing/LiveActivity'
+import { ExitIntentModal } from '@/components/landing/ExitIntentModal'
 
 const faqJsonLd = {
   '@context': 'https://schema.org',
@@ -49,6 +51,8 @@ export default function HomePage() {
       <CountryGrid />
       <FAQ />
       <CTASection />
+      <LiveActivity />
+      <ExitIntentModal />
     </>
   )
 }

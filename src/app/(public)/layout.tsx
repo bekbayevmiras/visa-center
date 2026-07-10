@@ -1,6 +1,6 @@
 import { Navbar } from '@/components/shared/Navbar'
 import { Footer } from '@/components/shared/Footer'
-import { WhatsAppButton } from '@/components/shared/WhatsAppButton'
+import { WhatsAppWidget } from '@/components/shared/WhatsAppWidget'
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -8,7 +8,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
-      <WhatsAppButton />
+      <WhatsAppWidget />
     </>
   )
 }

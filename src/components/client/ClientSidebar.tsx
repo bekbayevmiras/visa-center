@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Globe, LayoutDashboard, FileText, MessageCircle, User, LogOut, Plus } from 'lucide-react'
+import { Globe, LayoutDashboard, FileText, MessageCircle, User, LogOut, Plus, Gift } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -10,6 +10,7 @@ const NAV = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Мои заявки' },
   { href: '/apply', icon: Plus, label: 'Новая заявка' },
   { href: '/chat', icon: MessageCircle, label: 'Чат' },
+  { href: '/referral', icon: Gift, label: 'Реферальная программа' },
   { href: '/profile', icon: User, label: 'Профиль' },
 ]
 

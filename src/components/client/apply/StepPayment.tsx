@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, CreditCard, Smartphone, Loader2, CheckCircle } f
 import { Button } from '@/components/ui/button'
 import { ApplyFormData } from '@/app/(client)/apply/page'
 import { createClient } from '@/lib/supabase/client'
+import { trackApplicationComplete } from '@/lib/analytics'
 
 type PaymentMethod = 'kaspi' | 'card'
 type KaspiStep = 'idle' | 'qr' | 'confirmed'
@@ -136,6 +137,8 @@ export function StepPayment({
   const [confirmingPayment, setConfirmingPayment] = useState(false)
 
   const finalPrice = data.is_express ? data.express_price : data.visa_price
+  const depositAmount = Math.round(finalPrice * 0.3)
+  const remainingAmount = finalPrice - depositAmount
 
   const handleProceed = async () => {
     setCreating(true)
@@ -171,6 +174,9 @@ export function StepPayment({
       setAppCreated(true)
       if (method === 'kaspi') {
         setKaspiStep('qr')
+      } else {
+        // Card payment is handled offline; track as complete on app creation
+        trackApplicationComplete(finalPrice, data.country_name || '')
       }
     } catch (e) {
       console.error(e)
@@ -200,6 +206,7 @@ export function StepPayment({
     } finally {
       setConfirmingPayment(false)
       setKaspiStep('confirmed')
+      trackApplicationComplete(finalPrice, data.country_name || '')
     }
   }
 
@@ -209,6 +216,17 @@ export function StepPayment({
     <div>
       <h2 className="text-xl font-bold mb-1">Оплата</h2>
       <p className="text-sm text-muted-foreground mb-6">Выберите удобный способ оплаты</p>
+
+      {/* 30/70 guarantee banner */}
+      <div className="mb-4 rounded-xl bg-secondary/10 border border-secondary/30 p-3 flex items-start gap-3">
+        <span className="text-xl">🛡️</span>
+        <div>
+          <p className="text-sm font-semibold text-secondary">Оплата только за результат</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Сейчас вы платите только <strong>30%</strong> как бронирование. Остальные <strong>70%</strong> — только после того как получите визу.
+          </p>
+        </div>
+      </div>
 
       {/* Summary */}
       <div className="mb-6 rounded-xl bg-muted/50 p-4 space-y-2">
@@ -230,9 +248,19 @@ export function StepPayment({
           <span className="text-muted-foreground">Путешественников</span>
           <span className="font-medium">{data.adults_count + data.children_count}</span>
         </div>
-        <div className="border-t border-border pt-2 flex justify-between">
-          <span className="font-semibold">Итого</span>
-          <span className="text-lg font-bold text-primary">{finalPrice.toLocaleString('ru')} ₸</span>
+        <div className="border-t border-border pt-2 space-y-1.5">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Полная стоимость</span>
+            <span className="font-medium">{finalPrice.toLocaleString('ru')} ₸</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Сейчас (30% — бронирование)</span>
+            <span className="font-semibold text-primary">{depositAmount.toLocaleString('ru')} ₸</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">После получения визы (70%)</span>
+            <span className="font-medium text-muted-foreground">{remainingAmount.toLocaleString('ru')} ₸</span>
+          </div>
         </div>
       </div>
 

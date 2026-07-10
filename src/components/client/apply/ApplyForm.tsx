@@ -7,7 +7,7 @@ import { StepDetails } from '@/components/client/apply/StepDetails'
 import { StepDocuments } from '@/components/client/apply/StepDocuments'
 import { StepPayment } from '@/components/client/apply/StepPayment'
 import { StepConfirm } from '@/components/client/apply/StepConfirm'
-import { Check } from 'lucide-react'
+import { Check, Tag } from 'lucide-react'
 import { ApplyFormData } from '@/app/(client)/apply/page'
 
 const STEPS = [
@@ -51,6 +51,7 @@ const INITIAL: ApplyFormData = {
 export function ApplyForm({ initialProfile }: { initialProfile?: InitialProfile }) {
   const searchParams = useSearchParams()
   const [step, setStep] = useState(0)
+  const [refDiscount, setRefDiscount] = useState<number | null>(null)
   const [data, setData] = useState<ApplyFormData>({
     ...INITIAL,
     country_code: searchParams.get('country') ?? '',
@@ -74,12 +75,37 @@ export function ApplyForm({ initialProfile }: { initialProfile?: InitialProfile 
     }))
   }, [initialProfile])
 
+  // Auto-apply referral code from URL ?ref= param
+  useEffect(() => {
+    const refCode = searchParams.get('ref')
+    if (!refCode) return
+    fetch('/api/referral/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: refCode }),
+    })
+      .then(r => r.json())
+      .then(json => {
+        if (json.ok) {
+          setRefDiscount(json.discount_percent ?? 10)
+        }
+      })
+      .catch(() => null)
+  }, [searchParams])
+
   const update = (patch: Partial<ApplyFormData>) => setData(d => ({ ...d, ...patch }))
   const next = () => setStep(s => Math.min(s + 1, STEPS.length - 1))
   const prev = () => setStep(s => Math.max(s - 1, 0))
 
   return (
     <div className="max-w-2xl mx-auto">
+      {/* Referral discount banner */}
+      {refDiscount !== null && (
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-green-800">
+          <Tag className="h-4 w-4 shrink-0" />
+          <p className="text-sm font-medium">Скидка {refDiscount}% применена благодаря другу!</p>
+        </div>
+      )}
       {/* Step indicator */}
       <div className="mb-8">
         <div className="flex items-center">
