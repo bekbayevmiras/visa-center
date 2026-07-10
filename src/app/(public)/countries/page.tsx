@@ -12,13 +12,11 @@ export default async function CountriesPage() {
   const supabase = await createClient()
   type CountryItem = { id: string; name_ru: string; code: string; flag_emoji: string; base_price: number; processing_time_days: number }
 
-  const { data: rawCountries, error } = await supabase
+  const { data: rawCountries } = await supabase
     .from('countries')
     .select('id, name_ru, code, flag_emoji, base_price, processing_time_days, is_active')
     .eq('is_active', true)
     .order('popularity_rank')
-
-  if (error) console.error('[countries] Supabase error:', error)
 
   const countries = (rawCountries ?? []) as CountryItem[]
 
