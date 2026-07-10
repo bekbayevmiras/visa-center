@@ -4,11 +4,9 @@
 UPDATE public.countries
 SET
   base_price    = ROUND(base_price    * 0.8 / 500) * 500,
-  express_price = ROUND(express_price * 0.8 / 500) * 500,
-  updated_at    = NOW();
+  express_price = ROUND(express_price * 0.8 / 500) * 500;
 
 UPDATE public.visa_types
 SET
   price         = ROUND(price         * 0.8 / 500) * 500,
-  express_price = ROUND(COALESCE(express_price, 0) * 0.8 / 500) * 500,
-  updated_at    = NOW();
+  express_price = ROUND(COALESCE(express_price, 0) * 0.8 / 500) * 500;
