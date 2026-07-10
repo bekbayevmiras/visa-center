@@ -28,7 +28,7 @@ const POPULAR_COUNTRIES = [
 
 const TRUST_ITEMS = [
   'Бесплатная консультация',
-  'Результат за 3 дня',
+  '🛡️ Платите 30% вперёд, 70% после визы',
   'Возврат при отказе',
 ]
 
@@ -96,8 +96,11 @@ export function Hero() {
               <span className="text-primary">из Казахстана</span>
             </h1>
 
-            <p className="mb-4 text-lg text-muted-foreground md:text-xl">
-              AI-проверка документов за 30 секунд. Личный менеджер. Готово к подаче — вам остаётся только ждать.
+            <p className="mb-2 text-lg text-muted-foreground md:text-xl">
+              AI-проверка документов за 30 секунд. Личный менеджер. Цены от <strong className="text-foreground">8 000 ₸</strong>.
+            </p>
+            <p className="mb-4 text-base text-emerald-700 font-medium">
+              🛡️ Платите 30% вперёд — остальное только после получения визы
             </p>
 
             {/* Trust badges */}
@@ -150,7 +153,7 @@ export function Hero() {
                   type="submit"
                   className="bg-primary text-white hover:bg-primary/90 h-10 px-6 shrink-0"
                 >
-                  Подать заявку
+                  Получить консультацию бесплатно
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </form>

@@ -328,6 +328,25 @@ export default async function CountryPage({ params }: Props) {
                 Подать заявку <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
+
+            {/* Guarantee block */}
+            <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-200 p-4">
+              <p className="text-sm font-semibold text-emerald-800 mb-2">🛡️ Гарантия VisaKZ</p>
+              <div className="space-y-1.5 text-xs text-emerald-700">
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                  <span>30% — при подаче, 70% — после получения визы</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                  <span>Полный возврат 30% при отказе посольства</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                  <span>98% одобрений за 2024–2025</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Embassy info */}

@@ -12,6 +12,7 @@ const COUNTRIES_LINKS = [
 
 const SERVICE_LINKS = [
   { href: '/prices', label: 'Прайс-лист' },
+  { href: '/guarantee', label: '🛡️ Гарантия' },
   { href: '/countries', label: 'Все страны' },
   { href: '/about', label: 'О нас' },
 ]

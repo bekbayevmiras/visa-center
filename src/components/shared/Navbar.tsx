@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 const NAV_LINKS = [
   { href: '/countries', label: 'Страны' },
   { href: '/prices', label: 'Цены' },
+  { href: '/guarantee', label: '🛡️ Гарантия' },
   { href: '/blog', label: 'Блог' },
   { href: '/about', label: 'О нас' },
 ]
