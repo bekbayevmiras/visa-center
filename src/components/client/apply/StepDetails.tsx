@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowRight, ArrowLeft, Minus, Plus } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Minus, Plus, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ApplyFormData } from '@/app/(client)/apply/page'
 
@@ -68,6 +68,9 @@ export function StepDetails({
     onNext()
   }
 
+  const standardPrice = data.visa_price
+  const expressPrice = data.express_price
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <h2 className="text-xl font-bold mb-1">Детали поездки</h2>
@@ -83,6 +86,29 @@ export function StepDetails({
             <input type="date" {...register('travel_date_to')} className={inputClass} min={new Date().toISOString().split('T')[0]} />
           </Field>
         </div>
+
+        {/* Express toggle */}
+        {expressPrice > 0 && (
+          <div
+            className={`flex items-center justify-between rounded-xl border p-4 cursor-pointer transition-all ${
+              data.is_express ? 'border-accent bg-accent/10' : 'border-border hover:border-primary/40'
+            }`}
+            onClick={() => update({ is_express: !data.is_express })}
+          >
+            <div className="flex items-center gap-3">
+              <Zap className={`h-5 w-5 ${data.is_express ? 'text-amber-500' : 'text-muted-foreground'}`} />
+              <div>
+                <p className="text-sm font-medium">Срочное оформление (+50% к стоимости)</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Стандарт: {standardPrice.toLocaleString('ru')} ₸ → Срочно: {expressPrice.toLocaleString('ru')} ₸
+                </p>
+              </div>
+            </div>
+            <div className={`ml-4 h-5 w-10 rounded-full transition-colors shrink-0 ${data.is_express ? 'bg-amber-500' : 'bg-muted'} flex items-center px-0.5`}>
+              <div className={`h-4 w-4 rounded-full bg-white shadow transition-transform ${data.is_express ? 'translate-x-5' : ''}`} />
+            </div>
+          </div>
+        )}
 
         {/* Purpose */}
         <Field label="Цель поездки">

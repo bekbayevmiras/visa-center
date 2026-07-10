@@ -12,6 +12,7 @@ import {
   Brain,
   Settings,
   LogOut,
+  MessageSquare,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -20,6 +21,7 @@ const NAV = [
   { href: '/admin/applications', icon: FileText, label: 'Заявки' },
   { href: '/admin/kanban', icon: Kanban, label: 'Канбан' },
   { href: '/admin/leads', icon: Users, label: 'Лиды' },
+  { href: '/admin/inbox', icon: MessageSquare, label: 'Входящие' },
   { href: '/admin/analytics', icon: BarChart2, label: 'Аналитика' },
   { href: '/admin/ai', icon: Brain, label: 'AI Агенты' },
   { href: '/admin/settings', icon: Settings, label: 'Настройки' },

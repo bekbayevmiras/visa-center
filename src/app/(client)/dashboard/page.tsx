@@ -33,6 +33,11 @@ export default async function DashboardPage() {
   const apps = (applications ?? []) as unknown as ApplicationWithDetails[]
   const firstName = profile?.full_name?.split(' ')[0] ?? 'Клиент'
 
+  // First application date for "Вы с нами с..."
+  const firstAppDate = apps.length > 0
+    ? new Date(apps[apps.length - 1].created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
@@ -42,7 +47,7 @@ export default async function DashboardPage() {
           <p className="text-muted-foreground mt-1">
             {apps.length === 0
               ? 'Подайте первую заявку — это займёт 5 минут'
-              : `У вас ${apps.length} ${apps.length === 1 ? 'заявка' : apps.length < 5 ? 'заявки' : 'заявок'}`}
+              : `У вас ${apps.length} ${apps.length === 1 ? 'заявка' : apps.length < 5 ? 'заявки' : 'заявок'}${firstAppDate ? ` · Вы с нами с ${firstAppDate}` : ''}`}
           </p>
         </div>
         <Link href="/apply">
