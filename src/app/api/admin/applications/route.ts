@@ -30,7 +30,8 @@ export async function GET() {
       *,
       country:countries(id, name_ru, flag_emoji, code),
       user:users(id, full_name, email, phone),
-      visa_type:visa_types(id, name_ru, type_code)
+      visa_type:visa_types(id, name_ru, type_code),
+      payments(id, amount, currency, payment_method, provider, status, created_at, completed_at)
     `)
     .order('created_at', { ascending: false })
 

@@ -9,6 +9,8 @@ import {
   Kanban,
   Users,
   BarChart2,
+  Brain,
+  Settings,
   LogOut,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -19,6 +21,8 @@ const NAV = [
   { href: '/admin/kanban', icon: Kanban, label: 'Канбан' },
   { href: '/admin/leads', icon: Users, label: 'Лиды' },
   { href: '/admin/analytics', icon: BarChart2, label: 'Аналитика' },
+  { href: '/admin/ai', icon: Brain, label: 'AI Агенты' },
+  { href: '/admin/settings', icon: Settings, label: 'Настройки' },
 ]
 
 export function AdminSidebar() {
