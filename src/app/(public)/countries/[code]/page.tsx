@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Clock, CheckCircle, ArrowRight, Zap, Phone } from 'lucide-react'
+import { Clock, CheckCircle, ArrowRight, Zap, Phone, ChevronRight, MessageCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
+import { RequirementsChecklist } from '@/components/public/RequirementsChecklist'
 import type { Metadata } from 'next'
 
 type Props = { params: Promise<{ code: string }> }
@@ -25,6 +26,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
+// Region groupings for related countries
+const SCHENGEN = ['DE', 'FR', 'ES', 'IT', 'CZ', 'AT', 'NL', 'CH', 'PL', 'FI', 'NO', 'BE', 'SE', 'DK', 'PT']
+const ASIA = ['JP', 'CN', 'TH', 'VN', 'KR', 'ID', 'MY', 'SG', 'IN', 'AE', 'TR']
+const AMERICA = ['US', 'CA', 'MX', 'BR']
+
+function getRegionCodes(code: string): string[] {
+  if (SCHENGEN.includes(code)) return SCHENGEN
+  if (ASIA.includes(code)) return ASIA
+  if (AMERICA.includes(code)) return AMERICA
+  return []
+}
+
+function getRegionLabel(code: string): string {
+  if (SCHENGEN.includes(code)) return 'Шенген'
+  if (ASIA.includes(code)) return 'Азия'
+  if (AMERICA.includes(code)) return 'Америка'
+  return 'Другие страны'
+}
+
+function buildWhatsAppLink(countryName: string) {
+  const text = encodeURIComponent(`Здравствуйте! Меня интересует виза в ${countryName}`)
+  return `https://wa.me/77000000000?text=${text}`
+}
+
 export default async function CountryPage({ params }: Props) {
   const { code } = await params
   const supabase = await createClient()
@@ -32,11 +57,14 @@ export default async function CountryPage({ params }: Props) {
   type CountryRow = {
     id: string; name_ru: string; code: string; flag_emoji: string
     base_price: number; express_price: number; processing_time_days: number
-    processing_time_express_days: number; requirements: string[]; embassy_info: Record<string, string>
+    processing_time_express_days: number; requirements: unknown; embassy_info: Record<string, string>
   }
   type VisaTypeRow = {
     id: string; name_ru: string; price: number; express_price: number | null
     processing_days: number; validity_days: number | null; max_stay_days: number | null; entries: string
+  }
+  type RelatedCountryRow = {
+    code: string; name_ru: string; flag_emoji: string; base_price: number; processing_time_days: number
   }
 
   const { data: rawCountry } = await supabase
@@ -56,49 +84,114 @@ export default async function CountryPage({ params }: Props) {
     .eq('is_active', true)
 
   const visaTypes = (rawVisaTypes ?? []) as VisaTypeRow[]
-  const requirements: string[] = Array.isArray(country.requirements) ? country.requirements : []
+
+  // Parse requirements — can be string[] or { required: string[], recommended: string[] }
+  let requiredDocs: string[] = []
+  let recommendedDocs: string[] = []
+  const req = country.requirements
+  if (Array.isArray(req)) {
+    requiredDocs = req as string[]
+  } else if (req && typeof req === 'object' && !Array.isArray(req)) {
+    const reqObj = req as Record<string, unknown>
+    if (Array.isArray(reqObj.required)) requiredDocs = reqObj.required as string[]
+    if (Array.isArray(reqObj.recommended)) recommendedDocs = reqObj.recommended as string[]
+  }
+
+  // Related countries in same region
+  const regionCodes = getRegionCodes(country.code)
+  let relatedCountries: RelatedCountryRow[] = []
+  if (regionCodes.length > 0) {
+    const { data: rawRelated } = await supabase
+      .from('countries')
+      .select('code, name_ru, flag_emoji, base_price, processing_time_days')
+      .in('code', regionCodes)
+      .eq('is_active', true)
+      .neq('code', country.code)
+      .order('popularity_rank')
+      .limit(4)
+    relatedCountries = (rawRelated ?? []) as RelatedCountryRow[]
+  }
+
+  const whatsappLink = buildWhatsAppLink(country.name_ru)
+
+  // Build FAQ content from country data
+  const docsBrief = requiredDocs.slice(0, 3).join(', ') || 'паспорт, фото, анкета'
+  const faqs = [
+    {
+      q: `Сколько стоит виза в ${country.name_ru}?`,
+      a: `Стоимость оформления визы в ${country.name_ru} начинается от ${country.base_price.toLocaleString('ru')} ₸. Экспресс-оформление — от ${country.express_price.toLocaleString('ru')} ₸.`,
+    },
+    {
+      q: `Как долго ждать визу в ${country.name_ru}?`,
+      a: `Стандартный срок рассмотрения — ${country.processing_time_days} рабочих дней. При экспресс-оформлении — ${country.processing_time_express_days} рабочих дней.`,
+    },
+    {
+      q: 'Какие документы нужны?',
+      a: `Основной пакет включает: ${docsBrief}${requiredDocs.length > 3 ? ` и ещё ${requiredDocs.length - 3} документа` : ''}. Полный список зависит от типа визы и цели поездки.`,
+    },
+    {
+      q: 'Нужно ли ехать в посольство?',
+      a: 'Нет, мы всё оформим за вас. Вы можете подать документы онлайн и получить визу без личного визита в посольство.',
+    },
+  ]
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-12">
-      {/* Breadcrumb */}
-      <nav className="mb-6 text-sm text-muted-foreground">
-        <Link href="/countries" className="hover:text-foreground">Страны</Link>
-        {' / '}
-        <span>{country.name_ru}</span>
+    <div className="container mx-auto max-w-5xl px-4 py-12 pb-28 md:pb-12">
+      {/* Breadcrumbs */}
+      <nav className="mb-6 flex items-center gap-1 text-sm text-muted-foreground">
+        <Link href="/" className="hover:text-foreground transition-colors">Главная</Link>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <Link href="/countries" className="hover:text-foreground transition-colors">Страны</Link>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span className="text-foreground">{country.name_ru}</span>
       </nav>
 
-      {/* Hero */}
-      <div className="mb-10 flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-4 mb-3">
+      {/* Hero section */}
+      <div className="mb-10 rounded-2xl border border-border bg-card p-6 md:p-8">
+        <div className="flex flex-col gap-5">
+          {/* Flag + title */}
+          <div className="flex items-center gap-4">
             <span className="text-6xl">{country.flag_emoji}</span>
             <div>
               <h1 className="text-3xl font-bold">Виза в {country.name_ru}</h1>
               <p className="text-muted-foreground mt-1">из Казахстана · под ключ</p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-4 text-sm">
-            <span className="flex items-center gap-1.5 bg-muted rounded-full px-3 py-1">
+
+          {/* Processing time badges */}
+          <div className="flex flex-wrap gap-3">
+            <span className="inline-flex items-center gap-1.5 bg-muted rounded-full px-3 py-1.5 text-sm">
               <Clock className="h-4 w-4 text-primary" />
-              Стандарт: {country.processing_time_days} дней
+              {country.processing_time_days}–{country.processing_time_days + 5} дней
             </span>
-            <span className="flex items-center gap-1.5 bg-amber-50 text-amber-700 rounded-full px-3 py-1">
+            <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 rounded-full px-3 py-1.5 text-sm">
               <Zap className="h-4 w-4" />
               Экспресс: {country.processing_time_express_days} дней
             </span>
           </div>
-        </div>
-        <div className="shrink-0 flex flex-col gap-3 md:min-w-56">
-          <Link href={`/apply?country=${code.toLowerCase()}`}>
-            <Button className="w-full bg-primary text-white hover:bg-primary/90 h-11 gap-2">
-              Подать заявку <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-          <a href="https://wa.me/77000000000" target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" className="w-full h-11 gap-2">
-              <Phone className="h-4 w-4" /> Бесплатная консультация
-            </Button>
-          </a>
+
+          {/* Price */}
+          <div>
+            <p className="text-sm text-muted-foreground">от</p>
+            <p className="text-4xl font-bold text-primary">
+              {country.base_price.toLocaleString('ru')} ₸
+            </p>
+          </div>
+
+          {/* CTA buttons */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link href={`/apply?country=${code.toLowerCase()}`}>
+              <Button className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-6 gap-2">
+                Оформить визу <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" className="w-full sm:w-auto h-11 px-6 gap-2">
+                <MessageCircle className="h-4 w-4 text-green-600" />
+                Получить консультацию
+              </Button>
+            </a>
+          </div>
         </div>
       </div>
 
@@ -106,25 +199,43 @@ export default async function CountryPage({ params }: Props) {
         {/* Main content */}
         <div className="md:col-span-2 space-y-6">
           {/* Visa types */}
-          {visaTypes && visaTypes.length > 0 && (
+          {visaTypes.length > 0 && (
             <section className="rounded-2xl border border-border p-6">
-              <h2 className="text-lg font-semibold mb-4">Типы виз</h2>
+              <h2 className="text-xl font-semibold mb-5">Типы виз</h2>
               <div className="space-y-3">
                 {visaTypes.map(vt => (
-                  <div key={vt.id} className="flex items-center justify-between rounded-xl bg-muted/30 px-4 py-3">
-                    <div>
-                      <p className="font-medium text-sm">{vt.name_ru}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {vt.validity_days && `Действует ${vt.validity_days} дней · `}
-                        {vt.max_stay_days && `Пребывание до ${vt.max_stay_days} дней · `}
-                        {vt.entries === 'multiple' ? 'Многократная' : vt.entries === 'double' ? 'Двукратная' : 'Однократная'}
-                      </p>
+                  <div key={vt.id} className="rounded-xl border border-border bg-muted/20 p-4 hover:border-primary/30 transition-colors">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <p className="font-semibold text-sm mb-1">{vt.name_ru}</p>
+                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />{vt.processing_days} дн.
+                          </span>
+                          {vt.max_stay_days && (
+                            <span>Пребывание: до {vt.max_stay_days} дн.</span>
+                          )}
+                          {vt.validity_days && (
+                            <span>Действует: {vt.validity_days} дн.</span>
+                          )}
+                          <span>
+                            {vt.entries === 'multiple' ? 'Многократная' : vt.entries === 'double' ? 'Двукратная' : 'Однократная'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-bold text-sm">{vt.price.toLocaleString('ru')} ₸</p>
+                        {vt.express_price && (
+                          <p className="text-xs text-amber-600 mt-0.5">Экспресс: {vt.express_price.toLocaleString('ru')} ₸</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-sm">{vt.price.toLocaleString('ru')} ₸</p>
-                      {vt.express_price && (
-                        <p className="text-xs text-amber-600">Экспресс: {vt.express_price.toLocaleString('ru')} ₸</p>
-                      )}
+                    <div className="mt-3">
+                      <Link href={`/apply?country=${code.toLowerCase()}&visa=${vt.id}`}>
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
+                          Выбрать <ArrowRight className="h-3 w-3" />
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 ))}
@@ -132,20 +243,57 @@ export default async function CountryPage({ params }: Props) {
             </section>
           )}
 
-          {/* Requirements */}
-          {requirements.length > 0 && (
+          {/* Requirements checklist */}
+          {(requiredDocs.length > 0 || recommendedDocs.length > 0) && (
             <section className="rounded-2xl border border-border p-6">
-              <h2 className="text-lg font-semibold mb-4">Документы для визы</h2>
-              <ul className="space-y-2">
-                {requirements.map((req, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm">
-                    <CheckCircle className="h-4 w-4 text-secondary shrink-0 mt-0.5" />
-                    <span>{req}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-4 rounded-xl bg-primary/5 border border-primary/20 p-3 text-xs text-primary">
+              <h2 className="text-xl font-semibold mb-5">Документы для визы</h2>
+              <RequirementsChecklist required={requiredDocs} recommended={recommendedDocs} />
+              <div className="mt-5 rounded-xl bg-primary/5 border border-primary/20 p-3 text-xs text-primary">
                 AI автоматически проверит ваши документы на соответствие требованиям за 30 секунд после загрузки.
+              </div>
+            </section>
+          )}
+
+          {/* FAQ */}
+          <section className="rounded-2xl border border-border p-6">
+            <h2 className="text-xl font-semibold mb-5">Часто задаваемые вопросы</h2>
+            <div className="space-y-3">
+              {faqs.map((faq, i) => (
+                <details key={i} className="group rounded-xl border border-border overflow-hidden">
+                  <summary className="flex items-center justify-between gap-3 cursor-pointer px-4 py-3 text-sm font-medium hover:bg-muted/40 transition-colors list-none">
+                    <span>{faq.q}</span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground group-open:rotate-90 transition-transform" />
+                  </summary>
+                  <div className="px-4 pb-4 pt-2 text-sm text-muted-foreground border-t border-border">
+                    {faq.a}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </section>
+
+          {/* Related countries */}
+          {relatedCountries.length > 0 && (
+            <section className="rounded-2xl border border-border p-6">
+              <h2 className="text-xl font-semibold mb-5">
+                Другие страны — {getRegionLabel(country.code)}
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {relatedCountries.map(rel => (
+                  <Link
+                    key={rel.code}
+                    href={`/countries/${rel.code.toLowerCase()}`}
+                    className="group flex flex-col rounded-xl border border-border bg-card p-3 hover:border-primary/40 hover:shadow-md transition-all"
+                  >
+                    <span className="text-2xl mb-1">{rel.flag_emoji}</span>
+                    <span className="font-semibold text-xs group-hover:text-primary transition-colors leading-tight">
+                      {rel.name_ru}
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-0.5">
+                      от {rel.base_price.toLocaleString('ru')} ₸
+                    </span>
+                  </Link>
+                ))}
               </div>
             </section>
           )}
@@ -173,7 +321,7 @@ export default async function CountryPage({ params }: Props) {
             </div>
 
             <Link href={`/apply?country=${code.toLowerCase()}`}>
-              <Button className="w-full bg-primary text-white hover:bg-primary/90 gap-2">
+              <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
                 Подать заявку <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -190,7 +338,31 @@ export default async function CountryPage({ params }: Props) {
               ))}
             </div>
           )}
+
+          {/* WhatsApp consult card */}
+          <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="block">
+            <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm hover:bg-green-100 transition-colors cursor-pointer">
+              <div className="flex items-center gap-2 mb-1 font-semibold text-green-800">
+                <Phone className="h-4 w-4" />
+                Бесплатная консультация
+              </div>
+              <p className="text-green-700 text-xs">Ответим в WhatsApp в течение 15 минут</p>
+            </div>
+          </a>
         </div>
+      </div>
+
+      {/* Sticky mobile CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border bg-background/95 backdrop-blur-sm px-4 py-3 flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-muted-foreground">Стоимость оформления</p>
+          <p className="font-bold text-primary truncate">{country.base_price.toLocaleString('ru')} ₸</p>
+        </div>
+        <Link href={`/apply?country=${code.toLowerCase()}`} className="shrink-0">
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 h-10 px-5">
+            Оформить <ArrowRight className="h-4 w-4" />
+          </Button>
+        </Link>
       </div>
     </div>
   )
