@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
 
@@ -19,6 +19,8 @@ type LoginForm = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const fromApply = searchParams.get('from') === 'apply' || typeof window !== 'undefined' && document.referrer.includes('/apply')
   const [showPassword, setShowPassword] = useState(false)
   const [serverError, setServerError] = useState('')
 
@@ -51,6 +53,14 @@ export default function LoginPage() {
 
   return (
     <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
+      {fromApply && (
+        <div className="mb-5 flex items-start gap-3 rounded-xl bg-primary/5 border border-primary/20 px-4 py-3">
+          <Lock className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+          <p className="text-sm text-primary">
+            Войдите или зарегистрируйтесь чтобы подать заявку на визу. Это займёт 1 минуту.
+          </p>
+        </div>
+      )}
       <h1 className="text-2xl font-bold mb-2">Войти в кабинет</h1>
       <p className="text-sm text-muted-foreground mb-6">
         Нет аккаунта?{' '}

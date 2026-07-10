@@ -3,7 +3,7 @@ import { Shield, CheckCircle, ArrowRight, Star, CreditCard, Clock } from 'lucide
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Гарантия результата — оплата только после получения визы | VisaKZ',
+  title: 'Гарантия результата — оплата только после получения визы',
   description: 'Первый визовый центр в Казахстане с оплатой по результату. Платите 30% сейчас, 70% — только когда держите визу в руках.',
 }
 

@@ -4,6 +4,7 @@ import { Clock, CheckCircle, ArrowRight, Zap, Phone, ChevronRight, MessageCircle
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { RequirementsChecklist } from '@/components/public/RequirementsChecklist'
+import { toAccusative } from '@/lib/country-cases'
 import type { Metadata } from 'next'
 
 type Props = { params: Promise<{ code: string }> }
@@ -20,9 +21,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const country = data as { name_ru: string; flag_emoji: string } | null
   if (!country) return { title: 'Страна не найдена' }
 
+  const accusative = toAccusative(code, country.name_ru)
   return {
-    title: `Виза в ${country.name_ru} из Казахстана`,
-    description: `Оформление визы в ${country.name_ru} под ключ. AI-проверка документов, личный менеджер, 98% одобрений. Алматы, Астана, онлайн.`,
+    title: `Виза в ${accusative} из Казахстана`,
+    description: `Оформление визы в ${accusative} под ключ. AI-проверка документов, личный менеджер, 98% одобрений. Алматы, Астана, онлайн.`,
   }
 }
 
@@ -113,16 +115,17 @@ export default async function CountryPage({ params }: Props) {
   }
 
   const whatsappLink = buildWhatsAppLink(country.name_ru)
+  const accusative = toAccusative(country.code, country.name_ru)
 
   // Build FAQ content from country data
   const docsBrief = requiredDocs.slice(0, 3).join(', ') || 'паспорт, фото, анкета'
   const faqs = [
     {
-      q: `Сколько стоит виза в ${country.name_ru}?`,
-      a: `Стоимость оформления визы в ${country.name_ru} начинается от ${country.base_price.toLocaleString('ru')} ₸. Экспресс-оформление — от ${country.express_price.toLocaleString('ru')} ₸.`,
+      q: `Сколько стоит виза в ${accusative}?`,
+      a: `Стоимость оформления визы в ${accusative} начинается от ${country.base_price.toLocaleString('ru')} ₸. Экспресс-оформление — от ${country.express_price.toLocaleString('ru')} ₸.`,
     },
     {
-      q: `Как долго ждать визу в ${country.name_ru}?`,
+      q: `Как долго ждать визу в ${accusative}?`,
       a: `Стандартный срок рассмотрения — ${country.processing_time_days} рабочих дней. При экспресс-оформлении — ${country.processing_time_express_days} рабочих дней.`,
     },
     {
@@ -153,7 +156,7 @@ export default async function CountryPage({ params }: Props) {
           <div className="flex items-center gap-4">
             <span className="text-6xl">{country.flag_emoji}</span>
             <div>
-              <h1 className="text-3xl font-bold">Виза в {country.name_ru}</h1>
+              <h1 className="text-3xl font-bold">Виза в {accusative}</h1>
               <p className="text-muted-foreground mt-1">из Казахстана · под ключ</p>
             </div>
           </div>

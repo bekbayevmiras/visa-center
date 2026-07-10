@@ -50,11 +50,11 @@ export function LiveActivity() {
   useEffect(() => {
     if (dismissed) return
 
-    // Start after 5 seconds
+    // Start after 2 seconds
     const startTimer = setTimeout(() => {
       setVisible(true)
       showNext(0)
-    }, 5000)
+    }, 2000)
 
     return () => clearTimeout(startTimer)
   }, [dismissed, showNext])
