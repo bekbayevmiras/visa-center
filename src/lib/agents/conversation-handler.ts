@@ -42,12 +42,15 @@ export async function handleIncomingMessage(
     })
   }
 
-  // Загружаем последние сообщения для контекста диалога
+  // Загружаем последние сообщения этого конкретного диалога (фильтр по waId)
+  // Входящие: sent_by = waId; исходящие: whatsapp_message_id = waId (тег разговора)
   const { data: recentMessages } = await supabase
     .from('messages')
     .select('direction, content')
+    .or(`sent_by.eq.${waId},whatsapp_message_id.eq.${waId}`)
+    .eq('channel', 'whatsapp')
     .order('created_at', { ascending: false })
-    .limit(10)
+    .limit(12)
 
   type MessageRow = { direction: string; content: string }
   const history: Array<{ role: 'user' | 'assistant'; content: string }> = []
@@ -95,12 +98,13 @@ export async function handleIncomingMessage(
       .eq('id', existingLead.id)
   }
 
-  // Сохраняем исходящее сообщение
+  // Сохраняем исходящее сообщение; whatsapp_message_id = waId — тег для фильтрации диалога
   await supabase.from('messages').insert({
     channel: 'whatsapp',
     direction: 'outbound',
     content: responseText,
     sent_by: 'aida_bot',
+    whatsapp_message_id: waId,
   })
 
   return responseText

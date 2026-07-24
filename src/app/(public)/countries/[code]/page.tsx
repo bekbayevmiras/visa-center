@@ -9,6 +9,8 @@ import type { Metadata } from 'next'
 
 type Props = { params: Promise<{ code: string }> }
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://visa-center-teal.vercel.app'
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { code } = await params
   const supabase = await createClient()
@@ -22,9 +24,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!country) return { title: 'Страна не найдена' }
 
   const accusative = toAccusative(code, country.name_ru)
+  const title = `Виза в ${accusative} из Казахстана`
+  const description = `Оформление визы в ${accusative} под ключ. AI-проверка документов, личный менеджер, гарантия возврата при отказе. Алматы, Астана, онлайн.`
   return {
-    title: `Виза в ${accusative} из Казахстана`,
-    description: `Оформление визы в ${accusative} под ключ. AI-проверка документов, личный менеджер, 98% одобрений. Алматы, Астана, онлайн.`,
+    title,
+    description,
+    alternates: { canonical: `${SITE_URL}/countries/${code.toLowerCase()}` },
+    openGraph: {
+      title,
+      description,
+      url: `${SITE_URL}/countries/${code.toLowerCase()}`,
+      images: [{ url: `${SITE_URL}/og-image.png`, width: 1200, height: 630, alt: title }],
+    },
   }
 }
 
@@ -138,8 +149,51 @@ export default async function CountryPage({ params }: Props) {
     },
   ]
 
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(faq => ({
+      '@type': 'Question',
+      name: faq.q,
+      acceptedAnswer: { '@type': 'Answer', text: faq.a },
+    })),
+  }
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Главная', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Страны', item: `${SITE_URL}/countries` },
+      { '@type': 'ListItem', position: 3, name: country.name_ru, item: `${SITE_URL}/countries/${code.toLowerCase()}` },
+    ],
+  }
+
+  const serviceJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: `Оформление визы в ${accusative}`,
+    description: `Визовое сопровождение из Казахстана в ${country.name_ru} под ключ. AI-проверка документов, личный менеджер.`,
+    provider: {
+      '@type': 'LocalBusiness',
+      name: 'VisaKZ',
+      url: SITE_URL,
+    },
+    areaServed: { '@type': 'Country', name: 'Kazakhstan' },
+    offers: {
+      '@type': 'Offer',
+      price: country.base_price.toString(),
+      priceCurrency: 'KZT',
+      availability: 'https://schema.org/InStock',
+      url: `${SITE_URL}/countries/${code.toLowerCase()}`,
+    },
+  }
+
   return (
     <div className="container mx-auto max-w-5xl px-4 py-12 pb-28 md:pb-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }} />
       {/* Breadcrumbs */}
       <nav className="mb-6 flex items-center gap-1 text-sm text-muted-foreground">
         <Link href="/" className="hover:text-foreground transition-colors">Главная</Link>
@@ -343,7 +397,7 @@ export default async function CountryPage({ params }: Props) {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <CheckCircle className="h-3.5 w-3.5 shrink-0" />
-                  <span>98% одобрений за 2024–2025</span>
+                  <span>Высокий процент одобрений по нашим клиентам</span>
                 </div>
               </div>
             </div>

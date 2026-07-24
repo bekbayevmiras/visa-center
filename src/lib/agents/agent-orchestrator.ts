@@ -9,6 +9,54 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export type AgentGoal = 'REACH' | 'LEADS' | 'QUALITY' | 'REVENUE'
 
+// ---------------------------------------------------------------------------
+// Goal-driven config — влияет на поведение других агентов
+// ---------------------------------------------------------------------------
+
+export interface GoalConfig {
+  followup_tone: 'friendly' | 'urgent'
+  followup_max_day: 7 | 14 | 30
+  content_focus: 'educational' | 'promo' | 'social_proof' | 'conversion'
+  upsell_aggressiveness: 'low' | 'medium' | 'high'
+  hot_lead_sla_hours: number // через сколько часов звонить горячим лидам
+}
+
+export const GOAL_CONFIGS: Record<AgentGoal, GoalConfig> = {
+  REACH: {
+    followup_tone: 'friendly',
+    followup_max_day: 7,
+    content_focus: 'educational',
+    upsell_aggressiveness: 'low',
+    hot_lead_sla_hours: 4,
+  },
+  LEADS: {
+    followup_tone: 'friendly',
+    followup_max_day: 14,
+    content_focus: 'social_proof',
+    upsell_aggressiveness: 'medium',
+    hot_lead_sla_hours: 2,
+  },
+  QUALITY: {
+    followup_tone: 'friendly',
+    followup_max_day: 30,
+    content_focus: 'educational',
+    upsell_aggressiveness: 'low',
+    hot_lead_sla_hours: 1,
+  },
+  REVENUE: {
+    followup_tone: 'urgent',
+    followup_max_day: 30,
+    content_focus: 'conversion',
+    upsell_aggressiveness: 'high',
+    hot_lead_sla_hours: 1,
+  },
+}
+
+export async function getGoalConfig(): Promise<GoalConfig> {
+  const goal = await getGlobalGoal()
+  return GOAL_CONFIGS[goal]
+}
+
 export interface AgentRunLog {
   agent_name: string
   status: 'success' | 'error' | 'skipped'
@@ -226,7 +274,11 @@ export async function generateDailyReport(): Promise<DailyReport> {
     messages: [
       {
         role: 'user',
-        content: `Ты — Chief Operating Officer VisaKZ, визового центра в Алматы. Анализируй ежедневные метрики и давай конкретные рекомендации.
+        content: `Ты — Chief Operating Officer VisaKZ (Алматы). Ты управляешь командой AI-агентов и отвечаешь за операционные результаты.
+Твоя задача: анализировать метрики каждый день, выявлять проблемы ДО того как они станут кризисом, и давать actionable рекомендации.
+
+Контекст бизнеса: визовый центр, бизнес-модель 30/70, средний чек ~28,000₸, целевой рынок — Алматы.
+AI-агенты в команде: Аида Про (WhatsApp-бот), Lead Scorer (квалификация), Follow-up (последовательности), Content (контент), CFO (финансы), Market Intel (конкуренты), Post-sale (удержание).
 
 ## ТЕКУЩАЯ ГЛОБАЛЬНАЯ ЦЕЛЬ: ${globalGoal}
 Фокус: ${goalDescriptions[globalGoal]}
@@ -248,12 +300,19 @@ ${yesterdayContext}
 
 Дай анализ в JSON (только JSON):
 {
-  "summary": "2-3 предложения итога дня",
-  "bottlenecks": ["узкое горло 1", "узкое горло 2"],
-  "wins": ["победа 1", "победа 2"],
-  "recommendations": ["рекомендация 1 на завтра", "рекомендация 2"],
-  "rollback_alerts": ["если конверсия упала — что откатить, иначе пустой массив"],
-  "content_strategy": "конкретная стратегия контента на завтра исходя из цели ${globalGoal}: что именно публиковать"
+  "summary": "2-3 предложения итога дня с цифрами",
+  "bottlenecks": ["конкретное узкое горло с причиной и цифрой потерь"],
+  "wins": ["победа с конкретным результатом"],
+  "recommendations": [
+    "конкретное действие завтра: ЧТО, КТО, КОГДА, ожидаемый результат"
+  ],
+  "rollback_alerts": ["если конверсия упала >20% — что откатить, иначе пустой массив"],
+  "content_strategy": "конкретная тема, формат и канал для публикации завтра исходя из цели ${globalGoal}",
+  "agent_instructions": {
+    "followup_tone": "friendly|urgent — как агрессивно вести follow-up сегодня",
+    "lead_priority": "какой сегмент лидов приоритизировать: hot_only|warm_included|all",
+    "content_type": "educational|promo|social_proof|conversion"
+  }
 }`,
       },
     ],

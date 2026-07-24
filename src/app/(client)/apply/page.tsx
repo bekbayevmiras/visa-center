@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { getStoredUTM } from '@/components/shared/UTMCapture'
 
 const POPULAR_COUNTRY_CODES = ['DE', 'FR', 'AE', 'TR', 'US', 'GB', 'ES', 'IT', 'TH', 'JP']
 
@@ -85,6 +86,7 @@ function ApplyFormContent() {
 
     setIsSubmitting(true)
     try {
+      const utm = getStoredUTM()
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -97,6 +99,7 @@ function ApplyFormContent() {
           purpose: purpose || undefined,
           when_traveling: when || undefined,
           source: 'apply_form',
+          ...utm,
         }),
       })
       if (!res.ok) {

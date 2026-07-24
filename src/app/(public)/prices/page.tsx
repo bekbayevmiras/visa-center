@@ -6,7 +6,12 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Цены на визы',
-  description: 'Прозрачные цены на оформление виз в 28 стран. Стандарт и срочное оформление. Без скрытых комиссий.',
+  description: 'Прозрачные цены на оформление виз в 28 стран. На 20% ниже рынка. Стандарт и срочное оформление. Без скрытых комиссий.',
+  openGraph: {
+    title: 'Цены на визы — VisaKZ',
+    description: 'Прозрачные цены на 28 стран. На 20% ниже рынка. Гарантия возврата при отказе.',
+    type: 'website',
+  },
 }
 
 type CountryRow = {
@@ -64,6 +69,16 @@ function getGroup(code: string): string {
   return 'Другие страны'
 }
 
+const pricesFaqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQ.map(item => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: { '@type': 'Answer', text: item.a },
+  })),
+}
+
 export default async function PricesPage() {
   const supabase = await createClient()
 
@@ -93,6 +108,7 @@ export default async function PricesPage() {
 
   return (
     <div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricesFaqJsonLd) }} />
       {/* Header */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-16 md:py-20">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -139,7 +155,7 @@ export default async function PricesPage() {
                         <th className="px-4 py-3 text-left font-medium text-muted-foreground">Страна</th>
                         <th className="px-4 py-3 text-center font-medium text-muted-foreground">Срок (стандарт)</th>
                         <th className="px-4 py-3 text-center font-medium text-muted-foreground">Срок (срочно)</th>
-                        <th className="px-4 py-3 text-right font-medium text-muted-foreground line-through opacity-50">Рынок</th>
+                        <th className="px-4 py-3 text-right font-medium text-muted-foreground opacity-60">~Рынок</th>
                         <th className="px-4 py-3 text-right font-medium text-emerald-700">Наша цена</th>
                         <th className="px-4 py-3 text-right font-medium text-primary">Срочно</th>
                         <th className="px-4 py-3 text-right font-medium text-muted-foreground"></th>
@@ -180,12 +196,10 @@ export default async function PricesPage() {
                                 {country.processing_time_express_days} дн.
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-right text-muted-foreground">
-                              <span className="line-through text-sm">
-                                {Math.round(country.base_price / 0.8 / 500) * 500 > 0
-                                  ? (Math.round(country.base_price / 0.8 / 500) * 500).toLocaleString('ru-KZ')
-                                  : ''} ₸
-                              </span>
+                            <td className="px-4 py-3 text-right text-muted-foreground text-sm opacity-60">
+                              от {Math.round(country.base_price * 1.2 / 500) * 500 > 0
+                                ? (Math.round(country.base_price * 1.2 / 500) * 500).toLocaleString('ru-KZ')
+                                : ''} ₸
                             </td>
                             <td className="px-4 py-3 text-right font-semibold text-emerald-700">
                               {country.base_price.toLocaleString('ru-KZ')} ₸

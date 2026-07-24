@@ -3,12 +3,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, PhoneCall } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { getStoredUTM } from '@/components/shared/UTMCapture'
 
 const SESSION_KEY = 'visakz_exit_shown'
 
 export function ExitIntentModal() {
   const [open, setOpen] = useState(false)
-  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const fired = useRef(false)
@@ -31,27 +32,20 @@ export function ExitIntentModal() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email.trim()) return
+    if (!phone.trim()) return
     setLoading(true)
 
-    // Read UTM from localStorage
-    let utm: Record<string, string> = {}
-    try {
-      const stored = localStorage.getItem('visakz_utm')
-      if (stored) utm = JSON.parse(stored)
-    } catch { /* ignore */ }
+    const utm = getStoredUTM()
 
     try {
       await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: email,
-          phone: email,
+          name: 'Клиент (exit intent)',
+          phone: phone.trim(),
           source: 'exit_intent',
-          utm_source: utm.utm_source,
-          utm_medium: utm.utm_medium,
-          utm_campaign: utm.utm_campaign,
+          ...utm,
         }),
       })
     } catch { /* ignore */ }
@@ -112,10 +106,10 @@ export function ExitIntentModal() {
 
             <form onSubmit={handleSubmit} className="space-y-3">
               <input
-                type="email"
-                placeholder="Ваш email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                type="tel"
+                placeholder="+7 (777) 123-45-67"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
                 required
                 className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/50"
               />

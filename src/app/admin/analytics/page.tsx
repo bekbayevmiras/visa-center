@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/server'
+import { TrendingUp } from 'lucide-react'
 
 interface CountryStat {
   name_ru: string
@@ -98,6 +99,42 @@ export default async function AnalyticsPage() {
   const countryStats = Array.from(countryMap.values())
     .sort((a, b) => b.total - a.total)
 
+  // ── Content / UTM metrics ─────────────────────────────────────────────────
+  type LeadRow = { utm_source: string | null; utm_medium: string | null; utm_campaign: string | null; status: string }
+  const { data: utmLeadsRaw } = await (supabase as any)
+    .from('leads')
+    .select('utm_source, utm_medium, utm_campaign, status')
+
+  const utmLeads = (utmLeadsRaw ?? []) as LeadRow[]
+  const totalLeadsAll = utmLeads.length
+  const totalWithUTM = utmLeads.filter(l => l.utm_source).length
+
+  const sourceMap = new Map<string, { leads: number; converted: number }>()
+  for (const l of utmLeads) {
+    const key = l.utm_source ?? 'organic'
+    if (!sourceMap.has(key)) sourceMap.set(key, { leads: 0, converted: 0 })
+    const s = sourceMap.get(key)!
+    s.leads++
+    if (l.status === 'converted') s.converted++
+  }
+  const sourceStats = Array.from(sourceMap.entries())
+    .map(([source, v]) => ({ source, ...v, cr: v.leads ? +(v.converted / v.leads * 100).toFixed(1) : 0 }))
+    .sort((a, b) => b.leads - a.leads)
+
+  const campaignMap = new Map<string, { leads: number; converted: number; source: string }>()
+  for (const l of utmLeads) {
+    if (!l.utm_campaign) continue
+    const key = l.utm_campaign
+    if (!campaignMap.has(key)) campaignMap.set(key, { leads: 0, converted: 0, source: l.utm_source ?? 'unknown' })
+    const c = campaignMap.get(key)!
+    c.leads++
+    if (l.status === 'converted') c.converted++
+  }
+  const campaignStats = Array.from(campaignMap.entries())
+    .map(([campaign, v]) => ({ campaign, ...v, cr: v.leads ? +(v.converted / v.leads * 100).toFixed(1) : 0 }))
+    .sort((a, b) => b.leads - a.leads)
+    .slice(0, 10)
+
   const summaryCards = [
     {
       label: 'Конверсия лидов',
@@ -141,6 +178,75 @@ export default async function AnalyticsPage() {
             <p className="text-xs text-muted-foreground mt-1">{card.sub}</p>
           </div>
         ))}
+      </div>
+
+      {/* Content / UTM metrics */}
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-primary" />
+          <h2 className="font-semibold">Источники трафика</h2>
+          <span className="ml-auto text-xs text-muted-foreground">
+            {totalWithUTM} из {totalLeadsAll} лидов с UTM-метками
+          </span>
+        </div>
+        <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
+          {/* By source */}
+          <div>
+            <p className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border">По источнику</p>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border">
+                  <th className="text-left py-2 px-5 font-medium">Источник</th>
+                  <th className="text-right py-2 px-5 font-medium">Лидов</th>
+                  <th className="text-right py-2 px-5 font-medium">CR%</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {sourceStats.length === 0 ? (
+                  <tr><td colSpan={3} className="py-8 text-center text-muted-foreground text-xs">UTM-данных пока нет</td></tr>
+                ) : sourceStats.map(s => (
+                  <tr key={s.source} className="hover:bg-muted/30 transition-colors">
+                    <td className="py-2.5 px-5 font-medium">{s.source}</td>
+                    <td className="py-2.5 px-5 text-right">{s.leads}</td>
+                    <td className="py-2.5 px-5 text-right">
+                      <span className={s.cr >= 10 ? 'text-green-600 font-semibold' : s.cr >= 3 ? 'text-yellow-600' : 'text-muted-foreground'}>
+                        {s.cr}%
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* By campaign */}
+          <div>
+            <p className="px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border">По кампании</p>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-muted-foreground border-b border-border">
+                  <th className="text-left py-2 px-5 font-medium">Кампания</th>
+                  <th className="text-right py-2 px-5 font-medium">Лидов</th>
+                  <th className="text-right py-2 px-5 font-medium">CR%</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {campaignStats.length === 0 ? (
+                  <tr><td colSpan={3} className="py-8 text-center text-muted-foreground text-xs">Кампаний пока нет</td></tr>
+                ) : campaignStats.map(c => (
+                  <tr key={c.campaign} className="hover:bg-muted/30 transition-colors">
+                    <td className="py-2.5 px-5 font-medium truncate max-w-[160px]">{c.campaign}</td>
+                    <td className="py-2.5 px-5 text-right">{c.leads}</td>
+                    <td className="py-2.5 px-5 text-right">
+                      <span className={c.cr >= 10 ? 'text-green-600 font-semibold' : c.cr >= 3 ? 'text-yellow-600' : 'text-muted-foreground'}>
+                        {c.cr}%
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       {/* Country stats table */}

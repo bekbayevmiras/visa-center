@@ -11,18 +11,30 @@ export async function generateStaticParams() {
   return ARTICLES.map(article => ({ slug: article.slug }))
 }
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://visa-center-teal.vercel.app'
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const article = ARTICLES.find(a => a.slug === slug)
   if (!article) return { title: 'Статья не найдена' }
+  const title = `${article.title} — VisaKZ`
   return {
-    title: `${article.title} — VisaKZ`,
+    title,
     description: article.excerpt,
+    alternates: { canonical: `${SITE_URL}/blog/${slug}` },
     openGraph: {
-      title: `${article.title} — VisaKZ`,
+      title,
       description: article.excerpt,
       type: 'article',
       publishedTime: article.publishedAt,
+      authors: ['VisaKZ'],
+      images: [{ url: `${SITE_URL}/og-image.png`, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description: article.excerpt,
+      images: [`${SITE_URL}/og-image.png`],
     },
   }
 }
@@ -54,13 +66,39 @@ export default async function ArticlePage({ params }: Props) {
 
   const colorClass = CATEGORY_COLORS[article.category] ?? 'bg-muted text-muted-foreground'
 
-  // Build table of contents from headings
   const headings = content.sections
     .filter(s => s.heading)
     .map(s => s.heading as string)
 
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: article.title,
+    description: article.excerpt,
+    datePublished: article.publishedAt,
+    dateModified: article.publishedAt,
+    author: { '@type': 'Organization', name: 'VisaKZ', url: SITE_URL },
+    publisher: { '@type': 'Organization', name: 'VisaKZ', url: SITE_URL },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/blog/${slug}` },
+    url: `${SITE_URL}/blog/${slug}`,
+    articleSection: article.category,
+    inLanguage: 'ru-KZ',
+  }
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Главная', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Блог', item: `${SITE_URL}/blog` },
+      { '@type': 'ListItem', position: 3, name: article.title, item: `${SITE_URL}/blog/${slug}` },
+    ],
+  }
+
   return (
     <div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       {/* Breadcrumb */}
       <div className="border-b border-border bg-muted/30">
         <div className="container mx-auto max-w-7xl px-4 py-3">
@@ -173,7 +211,7 @@ export default async function ArticlePage({ params }: Props) {
                       <div className="my-10 rounded-2xl bg-primary p-6 text-white">
                         <h3 className="mb-2 text-lg font-bold">Нужна виза? Оформим за вас</h3>
                         <p className="mb-4 text-sm text-primary-foreground/80">
-                          Персональный менеджер, AI-проверка документов, 98% одобрений.
+                          Персональный менеджер, AI-проверка документов, гарантия возврата при отказе.
                         </p>
                         <Link
                           href="/apply"
@@ -196,7 +234,7 @@ export default async function ArticlePage({ params }: Props) {
                 </div>
                 <div>
                   <p className="font-semibold text-foreground">Команда VisaKZ</p>
-                  <p className="text-sm text-muted-foreground">1200+ виз оформлено · 98% одобрений</p>
+                  <p className="text-sm text-muted-foreground">1200+ виз оформлено · гарантия возврата при отказе</p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Профессиональные визовые консультанты с опытом работы в посольствах.
                   </p>

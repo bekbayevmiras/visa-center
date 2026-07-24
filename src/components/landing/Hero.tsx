@@ -33,19 +33,19 @@ const TRUST_ITEMS = [
   'Возврат при отказе',
 ]
 
-// Slowly drifting counter — starts at 12, ±1 every ~8s
-function useSocialCounter(initial = 12) {
-  const [count, setCount] = useState(initial)
+// Реальный счётчик заявок сегодня — загружается из API, обновляется каждые 2 мин
+function useSocialCounter() {
+  const [count, setCount] = useState<number | null>(null)
 
   useEffect(() => {
-    const tick = () => {
-      setCount(c => {
-        const delta = Math.random() < 0.5 ? -1 : 1
-        const next = c + delta
-        return Math.max(8, Math.min(18, next))
-      })
+    const load = () => {
+      fetch('/api/stats/live')
+        .then(r => r.json())
+        .then(d => { if (typeof d.appsToday === 'number') setCount(d.appsToday) })
+        .catch(() => {})
     }
-    const interval = setInterval(tick, 8000)
+    load()
+    const interval = setInterval(load, 120_000)
     return () => clearInterval(interval)
   }, [])
 
@@ -56,7 +56,7 @@ export function Hero() {
   const router = useRouter()
   const [selected, setSelected] = useState<string | null>(null)
   const [query, setQuery] = useState('')
-  const socialCount = useSocialCounter(12)
+  const socialCount = useSocialCounter()
 
   const handleSelect = (code: string) => {
     setSelected(code)
@@ -161,14 +161,15 @@ export function Hero() {
             </div>
 
             {/* Social counter */}
-            <p className="mt-5 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-secondary animate-pulse" />
-                Сегодня оформляют визу:{' '}
-                <span className="font-semibold text-foreground tabular-nums">{socialCount}</span>{' '}
-                человек
-              </span>
-            </p>
+            {socialCount !== null && socialCount > 0 && (
+              <p className="mt-5 text-sm text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-secondary animate-pulse" />
+                  Сегодня подано заявок:{' '}
+                  <span className="font-semibold text-foreground tabular-nums">{socialCount}</span>
+                </span>
+              </p>
+            )}
           </div>
         </div>
       </section>

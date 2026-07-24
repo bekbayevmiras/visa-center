@@ -5,7 +5,12 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'О нас',
-  description: 'VisaKZ — визовый центр нового поколения в Алматы. Основан в 2023 году. Более 1200 виз оформлено, 98% одобрений.',
+  description: 'VisaKZ — визовый центр нового поколения в Алматы. Основан в 2023 году. Более 1200 виз оформлено. Гарантия возврата при отказе.',
+  openGraph: {
+    title: 'О нас — VisaKZ',
+    description: 'VisaKZ — визовый центр нового поколения. AI + живой менеджер, 28 стран, гарантия результата.',
+    type: 'website',
+  },
 }
 
 const STATS = [

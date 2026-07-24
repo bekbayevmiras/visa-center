@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { MessageCircle, Phone } from 'lucide-react'
 import { trackLead } from '@/lib/analytics'
+import { getStoredUTM } from '@/components/shared/UTMCapture'
 
 export function CTASection() {
   const [form, setForm] = useState({ name: '', phone: '' })
@@ -12,10 +13,11 @@ export function CTASection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     trackLead()
+    const utm = getStoredUTM()
     await fetch('/api/leads', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, source: 'landing_cta', ...utm }),
     })
     setSubmitted(true)
   }

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { ARTICLES } from './(public)/blog/page'
 
-const BASE_URL = 'https://visa-center-teal.vercel.app'
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://visa-center-teal.vercel.app'
 
 const countryCodes = [
   'de', 'fr', 'es', 'it', 'cz', 'at', 'nl', 'ch', 'pl', 'fi',
@@ -32,16 +32,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/login`,
+      url: `${BASE_URL}/prices`,
       lastModified: now,
       changeFrequency: 'weekly',
-      priority: 0.5,
+      priority: 0.8,
     },
     {
-      url: `${BASE_URL}/register`,
+      url: `${BASE_URL}/guarantee`,
       lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.5,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/about`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.6,
     },
     {
       url: `${BASE_URL}/blog`,

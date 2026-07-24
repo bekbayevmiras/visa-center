@@ -5,6 +5,11 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Гарантия результата — оплата только после получения визы',
   description: 'Первый визовый центр в Казахстане с оплатой по результату. Платите 30% сейчас, 70% — только когда держите визу в руках.',
+  openGraph: {
+    title: 'Гарантия результата — VisaKZ',
+    description: 'Первый в Казахстане: платите 30% сейчас, 70% — только после получения визы. Возврат при отказе.',
+    type: 'website',
+  },
 }
 
 const HOW_IT_WORKS = [
@@ -60,9 +65,20 @@ const STATS = [
   { value: '4.9★', label: 'Рейтинг', sub: 'на Google' },
 ]
 
+const guaranteeFaqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQS.map(faq => ({
+    '@type': 'Question',
+    name: faq.q,
+    acceptedAnswer: { '@type': 'Answer', text: faq.a },
+  })),
+}
+
 export default function GuaranteePage() {
   return (
     <div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(guaranteeFaqJsonLd) }} />
       {/* Hero */}
       <section className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">

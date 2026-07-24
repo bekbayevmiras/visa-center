@@ -95,19 +95,25 @@ function categoryFromScore(score: number): LeadCategory {
 function nextActionFromCategory(category: LeadCategory, breakdown: LeadScore['breakdown']): string {
   switch (category) {
     case 'hot':
-      return 'Позвонить в течение 2 часов, предложить срочную консультацию и скидку 5%'
+      if (breakdown.urgency >= 20) {
+        return '🔥 СРОЧНО: Позвонить в течение 1 часа. Клиент готов оформлять прямо сейчас. Предложить начать немедленно.'
+      }
+      return '🔥 Позвонить в течение 2 часов. Клиент горячий — предложить консультацию сегодня, скидка 5% при оформлении до конца дня.'
     case 'warm':
       if (breakdown.budget < 10) {
-        return 'Отправить кейсы и цены, закрыть возражение по стоимости'
+        return '💰 Ценовое возражение: отправить сравнение с конкурентами, подчеркнуть схему 30/70 и гарантию возврата. Снять страх платить вперёд.'
       }
       if (breakdown.urgency < 10) {
-        return 'Уточнить сроки поездки и создать ощущение срочности'
+        return '⏰ Нет срочности: уточнить даты поездки. Создать дедлайн — "запись в консульство заканчивается". Предложить зарезервировать место.'
       }
-      return 'Запланировать звонок в течение 24 часов, выявить потребности'
+      if (breakdown.country >= 15) {
+        return '🌍 Сложная страна (Шенген/США): предложить бесплатную консультацию с экспертом сегодня. Объяснить преимущества работы через нас vs самостоятельно.'
+      }
+      return '📞 Warm lead: связаться в течение 24 часов. Задать уточняющие вопросы о датах и документах. Показать кейсы по нужной стране.'
     case 'cold':
-      return 'Добавить в email-рассылку, отправить полезный контент о стране'
+      return '📧 Добавить в email-последовательность. Отправить полезный контент о требованиях для нужной страны. Повторный активный контакт через 3-7 дней.'
     case 'unqualified':
-      return 'Поддерживать в базе, повторный контакт через 30 дней'
+      return '📋 Поддерживать в базе. WhatsApp-рассылка через 30 дней с сезонным предложением. Не тратить активное время менеджера.'
   }
 }
 
@@ -122,26 +128,29 @@ async function analyzeMessagesWithAI(messages: string[]): Promise<AiSignals> {
 
   const conversation = messages.join('\n---\n')
 
-  const systemPrompt = `Ты — аналитик лидов визового центра VisaKZ.
-Проанализируй переписку с клиентом и определи сигналы бюджета и срочности.
+  const systemPrompt = `Ты — старший аналитик продаж визового центра VisaKZ. Твоя задача — точно определить качество лида по переписке.
 
-Верни ТОЛЬКО JSON:
+Верни ТОЛЬКО JSON (без лишнего текста):
 {
   "budget_score": <0, 10 или 20>,
   "urgency_score": <5, 10, 15 или 20>,
-  "reasoning": "<краткое объяснение на русском>"
+  "reasoning": "<краткое объяснение на русском — что именно в тексте дало эту оценку>"
 }
 
 Правила для budget_score:
-- 20: упомянул цену и не возражал, готов платить
-- 10: спрашивал о цене, нет явного возражения
-- 0: жаловался на дороговизну, явный ценовой барьер
+- 20: клиент назвал конкретные суммы без возражений, согласился с ценой, спросил реквизиты, сказал "ок беру", "давайте оформляем"
+- 10: спрашивал о цене без явных возражений, интересовался услугой, не реагировал негативно на цену
+- 0: прямо сказал "дорого", "не могу себе позволить", "есть дешевле", просил скидку более 30%, сравнивал с самостоятельным оформлением
 
 Правила для urgency_score:
-- 20: поездка в течение 1 месяца
-- 15: поездка через 1-3 месяца
-- 10: поездка через 3-6 месяцев
-- 5: дата не указана или неопределённая`
+- 20: поездка через 1-4 недели, визовая запись уже есть, авиабилеты куплены
+- 15: поездка через 1-2 месяца, конкретная дата упомянута
+- 10: поездка через 2-4 месяца, примерные планы есть
+- 5: дата не указана, "думаю поехать", "когда-нибудь", "просто интересуюсь"
+
+Обращай внимание:
+- Сигналы готовности к покупке: конкретные вопросы о процессе, просьба прислать список документов, "что нужно делать"
+- Антисигналы: сравнение с конкурентами, несколько раз переспрашивает одно и то же, не отвечает на уточняющие вопросы`
 
   const response = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',
@@ -224,7 +233,7 @@ export async function scoreAllLeads(): Promise<void> {
 
   const { data: leads, error } = await (supabase as any)
     .from('leads')
-    .select('id, source, country_interest, status, created_at, updated_at')
+    .select('id, source, country_interest, status, created_at, updated_at, whatsapp_id')
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -234,7 +243,21 @@ export async function scoreAllLeads(): Promise<void> {
 
   if (!leads || leads.length === 0) return
 
-  // Score each lead (messages not available in bulk mode — pass empty array)
+  // Загружаем все сообщения за раз и группируем по whatsapp_id
+  const { data: allMessages } = await (supabase as any)
+    .from('messages')
+    .select('sent_by, content, direction')
+    .eq('channel', 'whatsapp')
+    .eq('direction', 'inbound')
+    .order('created_at', { ascending: false })
+
+  type MsgRow = { sent_by: string; content: string }
+  const messagesByWaId: Record<string, string[]> = {}
+  for (const msg of (allMessages ?? []) as MsgRow[]) {
+    if (!messagesByWaId[msg.sent_by]) messagesByWaId[msg.sent_by] = []
+    messagesByWaId[msg.sent_by].push(msg.content)
+  }
+
   const scored: Array<{ id: string; score: LeadScore }> = []
 
   for (const lead of leads as Array<{
@@ -244,14 +267,16 @@ export async function scoreAllLeads(): Promise<void> {
     status?: string
     created_at?: string
     updated_at?: string
+    whatsapp_id?: string
   }>) {
+    const messages = lead.whatsapp_id ? (messagesByWaId[lead.whatsapp_id] ?? []) : []
     const score = await scoreLead({
       source: lead.source,
       country_interest: lead.country_interest,
       status: lead.status,
       created_at: lead.created_at,
       last_contact_at: lead.updated_at,
-      messages: [], // no messages in bulk mode
+      messages,
     })
     scored.push({ id: lead.id, score })
   }

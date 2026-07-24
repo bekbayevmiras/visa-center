@@ -148,32 +148,35 @@ ${pricingPositions.map(p => `- ${p.country_name}: наша цена ${p.our_pric
     messages: [
       {
         role: 'user',
-        content: `Ты — Market Intelligence аналитик для визового центра VisaKZ в Алматы, Казахстан.
-Целевой рынок: физические лица, планирующие поездки из Казахстана.
-Уникальное преимущество VisaKZ: схема оплаты 30/70 (30% сейчас, 70% после получения визы) + AI-ассистент.
-Цель: захват 50% рынка визовых центров Алматы за 1 год органически.
+        content: `Ты — Senior Market Intelligence аналитик визового центра VisaKZ (Алматы).
+Контекст: ~15-20 визовых центров в Алматы, 3-4 крупных игрока. Наши УТП: оплата 30/70 (70% ТОЛЬКО после получения визы), AI-ассистент, 24/7, онлайн.
+Цель: захват 50% рынка Алматы за 12 месяцев. Аудитория: 25-45 лет, доход средний+, активные путешественники.
 
 ${dataContext}
 
-Дай структурированный анализ в JSON (только JSON, без markdown):
+Дай КОНКРЕТНЫЙ анализ с цифрами. Избегай общих фраз.
+JSON только (без markdown):
 {
-  "executive_summary": "2-3 предложения о состоянии рынка и нашей позиции",
+  "executive_summary": "2-3 предложения с конкретными цифрами о нашей позиции",
   "opportunities": [
     {
-      "type": "price_increase|new_country|express_premium|package_upsell|segment_gap",
-      "description": "конкретное описание",
-      "potential_revenue": "оценка дополнительной выручки в месяц",
-      "priority": "high|medium|low"
+      "type": "price_increase|new_country|express_premium|package_upsell|segment_gap|partnership",
+      "description": "конкретное описание — какая страна, сегмент, потенциал",
+      "potential_revenue": "реалистичная доп. выручка в месяц в тенге",
+      "priority": "high|medium|low",
+      "quick_win": true
     }
   ],
-  "threats": ["угроза 1", "угроза 2"],
+  "threats": ["конкретная угроза с оценкой влияния"],
   "action_items": [
     {
-      "action": "конкретное действие",
-      "timeline": "сроки",
-      "impact": "high|medium|low"
+      "action": "конкретное действие с ответственным",
+      "timeline": "например: следующие 7 дней",
+      "impact": "high|medium|low",
+      "metric": "как измерим успех"
     }
-  ]
+  ],
+  "pricing_insight": "главный вывод — где теряем деньги или клиентов"
 }`,
       },
     ],

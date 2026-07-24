@@ -28,6 +28,8 @@ export interface CFOReport {
   alerts: string[]
   recommendations: string[]
   top_opportunity: string
+  cash_flow_status?: 'healthy' | 'warning' | 'critical'
+  conversion_bottleneck?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -189,15 +191,24 @@ export async function generateCFOReport(): Promise<CFOReport> {
   const aiResponse = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 1024,
-    system: `Ты — CFO-аналитик казахстанского визового центра VisaKZ.
-Анализируй метрики и возвращай ТОЛЬКО JSON без дополнительного текста:
+    system: `Ты — Chief Financial Officer визового центра VisaKZ (Алматы). Ты следишь за финансовым здоровьем бизнеса и видишь паттерны, которые другие пропускают.
+Модель бизнеса: 30/70 оплата (30% аванс + 70% после визы). Средний чек: ~28,000₸. Цель: прибыльный рост, минимизация потерь.
+
+Анализируй метрики с точки зрения:
+1. Cash flow: сколько реально на счету vs дебиторка
+2. Конверсия: где теряем деньги на каждом этапе
+3. Риски: что может ударить по выручке в ближайшие 7 дней
+4. Возможности: где быстро поднять выручку без доп. затрат
+
+Возвращай ТОЛЬКО JSON без дополнительного текста:
 {
-  "alerts": ["строка 1", "строка 2"],
-  "recommendations": ["строка 1", "строка 2", "строка 3"],
-  "top_opportunity": "одна самая важная возможность на сегодня"
+  "alerts": ["⚠️ конкретная проблема с цифрами", "⚠️ другая проблема"],
+  "recommendations": ["💡 конкретное действие с ожидаемым результатом", "💡 ..."],
+  "top_opportunity": "✅ одна самая приоритетная финансовая возможность сегодня с конкретной суммой",
+  "cash_flow_status": "healthy|warning|critical",
+  "conversion_bottleneck": "где в воронке теряем больше всего денег сегодня"
 }
-Используй эмодзи: ⚠️ для предупреждений, ✅ для позитивного, 💡 для рекомендаций.
-Пиши кратко, конкретно, по делу. Язык: русский.`,
+Язык: русский. Пиши как финансовый директор, а не менеджер.`,
     messages: [{ role: 'user', content: metricsContext }],
   })
 
@@ -208,6 +219,8 @@ export async function generateCFOReport(): Promise<CFOReport> {
     alerts?: string[]
     recommendations?: string[]
     top_opportunity?: string
+    cash_flow_status?: 'healthy' | 'warning' | 'critical'
+    conversion_bottleneck?: string
   }
 
   let analysis: AiAnalysis = {}
@@ -250,6 +263,8 @@ export async function generateCFOReport(): Promise<CFOReport> {
     alerts,
     recommendations: analysis.recommendations ?? [],
     top_opportunity: analysis.top_opportunity ?? '',
+    cash_flow_status: analysis.cash_flow_status,
+    conversion_bottleneck: analysis.conversion_bottleneck,
   }
 }
 

@@ -24,6 +24,7 @@ const VALID_CONTENT_TYPES: ContentType[] = [
   'email_newsletter',
   'blog_article',
   'whatsapp_broadcast',
+  'video_script',
 ]
 
 export async function POST(request: NextRequest) {

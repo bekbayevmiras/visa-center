@@ -8,6 +8,7 @@ export type ContentType =
   | 'email_newsletter'
   | 'blog_article'
   | 'whatsapp_broadcast'
+  | 'video_script'
 
 export interface GeneratedContent {
   type: ContentType
@@ -19,12 +20,28 @@ export interface GeneratedContent {
   publish_at?: string
 }
 
-const CONTENT_SYSTEM_PROMPT = `Ты — опытный контент-менеджер казахстанского визового центра VisaKZ.
-Ты создаёшь маркетинговый контент на русском языке для жителей Казахстана.
-Тематика: визы, путешествия, страны, оформление документов.
-Упоминай бренд VisaKZ естественно.
-Иногда используй казахские фразы (например "Сіздің визаңыз дайын!").
-Используй уместные эмодзи.`
+const CONTENT_SYSTEM_PROMPT = `Ты — Senior Content Strategist визового центра VisaKZ (Алматы, Казахстан).
+Ты создаёшь контент, который КОНВЕРТИРУЕТ — не просто информирует, а побуждает к действию.
+Целевая аудитория: казахстанцы 25-45 лет, планируют поездку, выбирают между самостоятельным оформлением и визовым центром.
+
+Наши УТП которые нужно продвигать:
+1. Оплата 30/70 — платишь 30% сейчас, 70% только ПОСЛЕ получения визы (уникально в Казахстане)
+2. AI-ассистент Аида Про — отвечает в WhatsApp за 30 секунд, 24/7
+3. Гарантия возврата при отказе консульства — полный возврат 30% аванса
+4. Цены на 20% ниже среднерыночных
+5. Личный менеджер + AI-проверка документов — не пропустим ни одной ошибки
+
+СТРОГИЕ ПРАВИЛА (нарушение = плохой контент):
+- НИКОГДА не придумывай статистику: не пиши "98%", "94%", "87% одобрений" — у нас нет верифицированных цифр по каждой стране
+- Вместо выдуманных процентов пиши: "высокий процент одобрений", "большинство наших клиентов получают визу"
+- НИКОГДА не используй фейковую срочность: "осталось N мест", "предложение истекает через X часов" — это разрушает доверие
+- Реальная срочность: реальные сроки консульств, реальные сезонные очереди (лето = высокий сезон)
+- Боли клиентов: боятся отказа, не хотят собирать документы самостоятельно, не знают что подавать
+- Социальное доказательство: реальные сценарии (студент, бизнес-поездка, семейный отпуск) — без выдуманных имён и цифр
+- CTA конкретный: "Напишите в WhatsApp прямо сейчас" > "Свяжитесь с нами"
+- Иногда используй казахские фразы: "Жол болсын!", "Сіздің визаңыз дайын!", "Рахмет"
+- Используй уместные эмодзи ✈️🛂🌍🎉
+- Упоминай бренд VisaKZ органично, не навязчиво`
 
 function buildContentPrompt(
   type: ContentType,
@@ -148,6 +165,28 @@ ${contextBlock}
   "body": "<текст сообщения>"
 }`
 
+    case 'video_script':
+      return `Создай сценарий короткого видео (TikTok / Instagram Reels) для визового центра VisaKZ.
+Тема: ${topic}
+${contextBlock}
+Тон: ${tone}
+
+Требования:
+- Длительность: 30–60 секунд
+- Хук в первые 3 секунды — должен ОСТАНОВИТЬ скролл
+- Чёткая структура: хук → боль → решение → CTA
+- Разговорный язык, будто говорит живой человек в камеру
+- Конкретные визуальные инструкции для каждой сцены
+- CTA в конце: подписаться / написать в WhatsApp
+
+Верни JSON:
+{
+  "title": "<заголовок видео>",
+  "body": "<полный сценарий с таймкодами и визуальными инструкциями>",
+  "suggested_image_prompt": "<промпт для превью-обложки видео на английском>",
+  "hashtags": ["хэштег1", "хэштег2", ...]
+}`
+
     default:
       return `Создай контент для визового центра VisaKZ на тему: ${topic}`
   }
@@ -181,16 +220,29 @@ export async function generateContent(
   const text = raw.replace(/```(?:json)?\n?/g, '').trim()
 
   let parsed: Partial<GeneratedContent> = {}
-  try {
-    parsed = JSON.parse(text) as Partial<GeneratedContent>
-  } catch {
+  const tryParse = (s: string): Partial<GeneratedContent> | null => {
+    try {
+      return JSON.parse(s) as Partial<GeneratedContent>
+    } catch {
+      // Escape unescaped literal newlines inside JSON string values
+      try {
+        const fixed = s.replace(/("(?:[^"\\]|\\.)*")/g, (m) =>
+          m.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
+        )
+        return JSON.parse(fixed) as Partial<GeneratedContent>
+      } catch {
+        return null
+      }
+    }
+  }
+
+  const direct = tryParse(text)
+  if (direct) {
+    parsed = direct
+  } else {
     const match = text.match(/\{[\s\S]*\}/)
     if (match) {
-      try {
-        parsed = JSON.parse(match[0]) as Partial<GeneratedContent>
-      } catch {
-        parsed = { body: text }
-      }
+      parsed = tryParse(match[0]) ?? { body: text }
     } else {
       parsed = { body: text }
     }
