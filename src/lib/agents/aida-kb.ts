@@ -27,7 +27,9 @@ export async function findSimilarScenarios(
   const { data: ftsResults } = await supabase
     .from('aida_kb')
     .select('client_message, aida_response, category, subcategory, grade_total, verdict, strengths')
-    .textSearch('search_vector', message.split(' ').slice(0, 6).join(' | '), {
+    // websearch_to_tsquery игнорирует '|' и соединяет слова по AND — почти всегда пусто.
+    // Используем ключевое слово 'or' → websearch трактует его как OR-оператор.
+    .textSearch('search_vector', message.split(' ').slice(0, 6).join(' or '), {
       type: 'websearch',
       config: 'russian',
     })
