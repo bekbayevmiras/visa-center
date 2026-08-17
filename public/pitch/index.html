@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VisaKZ — Питч-дек · Almaty Hub Incubation 2026</title>
+<style>
+  :root{
+    --navy:#0B1F3A; --navy2:#12294d; --teal:#14B8A6; --teal-d:#0d9488;
+    --amber:#F59E0B; --ink:#0f172a; --mut:#64748b; --line:#e2e8f0; --bg:#f8fafc;
+    --white:#ffffff; --red:#ef4444; --green:#10b981;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:#0a1728;color:var(--ink);-webkit-font-smoothing:antialiased;overflow:hidden;
+  }
+  .deck{position:fixed;inset:0}
+  .slide{
+    position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;
+    padding:6vh 8vw;background:var(--bg);opacity:0;transition:opacity .35s ease;overflow:hidden;
+  }
+  .slide.active{display:flex;opacity:1}
+  .slide.dark{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff}
+  .slide.dark h1,.slide.dark h2{color:#fff}
+  h1{font-size:3.4rem;line-height:1.05;letter-spacing:-.02em;margin-bottom:.5rem}
+  h2{font-size:2.3rem;line-height:1.1;letter-spacing:-.02em;color:var(--navy);margin-bottom:1.6rem}
+  h2 .num{color:var(--teal);font-weight:800;margin-right:.4rem}
+  p{font-size:1.35rem;line-height:1.5;color:var(--ink)}
+  .lead{font-size:1.6rem;color:var(--mut);max-width:60ch}
+  .kicker{display:inline-block;font-size:.9rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:1rem}
+  .slide.dark .kicker{color:var(--amber)}
+  .accent{color:var(--teal);font-weight:700}
+  .amber{color:var(--amber);font-weight:700}
+  .grid{display:grid;gap:1.4rem;margin-top:.5rem}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.5rem 1.6rem;box-shadow:0 1px 3px rgba(15,23,42,.05)}
+  .slide.dark .card{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+  .card h3{font-size:1.25rem;color:var(--navy);margin-bottom:.5rem}
+  .slide.dark .card h3{color:#fff}
+  .card p{font-size:1.05rem;color:var(--mut)}
+  .slide.dark .card p{color:#cbd5e1}
+  .stat{font-size:3.2rem;font-weight:800;letter-spacing:-.03em;color:var(--navy);line-height:1}
+  .slide.dark .stat{color:#fff}
+  .stat .u{font-size:1.2rem;color:var(--teal);font-weight:700}
+  .stat-lbl{font-size:1rem;color:var(--mut);margin-top:.5rem;line-height:1.35}
+  .slide.dark .stat-lbl{color:#94a3b8}
+  ul.clean{list-style:none;display:flex;flex-direction:column;gap:1rem;margin-top:.5rem}
+  ul.clean li{font-size:1.3rem;line-height:1.4;padding-left:2.2rem;position:relative}
+  ul.clean li::before{content:"";position:absolute;left:0;top:.55rem;width:1rem;height:1rem;border-radius:4px;background:var(--teal)}
+  ul.clean li.bad::before{background:var(--red)}
+  ul.clean li.good::before{background:var(--green)}
+  .src{position:absolute;bottom:2.2vh;left:8vw;right:8vw;font-size:.8rem;color:#94a3b8;line-height:1.4}
+  .slide.dark .src{color:#64748b}
+  .foot{position:absolute;bottom:2.2vh;right:8vw;font-size:.85rem;color:#94a3b8;font-weight:600}
+  .brand{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.3rem;letter-spacing:-.02em}
+  .brand .dot{width:14px;height:14px;border-radius:5px;background:var(--teal)}
+  table{width:100%;border-collapse:collapse;font-size:1.15rem;margin-top:.5rem}
+  th,td{text-align:left;padding:.85rem 1rem;border-bottom:1px solid var(--line)}
+  th{color:var(--mut);font-weight:600;font-size:.95rem;text-transform:uppercase;letter-spacing:.05em}
+  td.us{color:var(--teal-d);font-weight:700}
+  td.them{color:var(--mut)}
+  .tag{display:inline-block;background:rgba(20,184,166,.12);color:var(--teal-d);font-weight:700;font-size:.85rem;padding:.3rem .7rem;border-radius:999px}
+  .funnel{display:flex;flex-direction:column;gap:.6rem;margin-top:.5rem}
+  .funnel .row{display:flex;align-items:center;gap:1.2rem}
+  .funnel .bar{height:56px;border-radius:10px;display:flex;align-items:center;padding-left:1.3rem;color:#fff;font-weight:700;font-size:1.15rem}
+  .progress{position:fixed;bottom:0;left:0;height:4px;background:var(--teal);transition:width .35s ease;z-index:50}
+  .dots{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:7px;z-index:50}
+  .dots i{width:7px;height:7px;border-radius:50%;background:rgba(148,163,184,.5);cursor:pointer}
+  .dots i.on{background:var(--teal);width:22px;border-radius:4px}
+  .hint{position:fixed;bottom:12px;right:16px;font-size:.75rem;color:#94a3b8;z-index:50}
+  .big-quote{font-size:2.2rem;line-height:1.3;font-weight:600;max-width:22ch}
+  .mvp-pill{display:inline-flex;align-items:center;gap:.5rem;background:rgba(16,185,129,.15);color:#059669;font-weight:700;padding:.4rem .9rem;border-radius:999px;font-size:1rem}
+  .mvp-pill .live{width:9px;height:9px;border-radius:50%;background:#10b981;box-shadow:0 0 0 4px rgba(16,185,129,.25)}
+  .two{display:grid;grid-template-columns:1.1fr 1fr;gap:3rem;align-items:center}
+  @media print{
+    @page{size:1280px 720px;margin:0}
+    html,body{overflow:visible;height:auto}
+    .deck{position:static}
+    .slide{display:flex!important;opacity:1!important;position:relative;page-break-after:always;break-after:page;width:1280px;height:720px;inset:auto;padding:56px 90px}
+    .slide:last-child{page-break-after:auto}
+    .progress,.dots,.hint{display:none!important}
+    .src,.foot{position:absolute}
+  }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <!-- 1 · TITLE -->
+  <section class="slide dark active">
+    <span class="kicker">Almaty Hub Incubation · 2026</span>
+    <div class="brand" style="font-size:1.6rem;margin-bottom:2rem"><span class="dot"></span> VisaKZ</div>
+    <h1>Виза за рубеж — <span style="color:var(--teal)">онлайн, с AI и гарантией результата</span></h1>
+    <p class="lead" style="margin-top:1.5rem;color:#cbd5e1">Первая в Казахстане визовая платформа, где AI-консультант ведёт клиента от вопроса до визы — и снижает риск отказа.</p>
+    <div style="margin-top:3rem;display:flex;gap:3rem;align-items:baseline">
+      <div><div style="color:#94a3b8;font-size:.95rem">Основатель</div><div style="font-size:1.3rem;font-weight:700">Мирас Бекбаев</div></div>
+      <div><div style="color:#94a3b8;font-size:.95rem">Продукт</div><div style="font-size:1.3rem;font-weight:700"><span class="mvp-pill"><span class="live"></span>MVP уже в проде</span></div></div>
+    </div>
+    <div class="foot">visa-center-teal.vercel.app</div>
+  </section>
+
+  <!-- 2 · PROBLEM -->
+  <section class="slide">
+    <h2><span class="num">01</span>Проблема</h2>
+    <div class="two">
+      <div>
+        <ul class="clean">
+          <li class="bad">Оформление визы в Казахстане — <b>непрозрачно и офлайн</b>: агентства работают вручную, цены «по звонку»</li>
+          <li class="bad">Клиент <b>не понимает свои шансы</b> и платит вслепую — риск отказа реальный</li>
+          <li class="bad">Отказ = <b>потеря денег и поездки</b>, консульский сбор не возвращается</li>
+          <li class="bad">Нет консультации 24/7 — по вечерам и выходным клиент остаётся один на один с анкетой</li>
+        </ul>
+      </div>
+      <div class="card" style="background:#fff">
+        <div class="stat" style="color:var(--red)">16 134</div>
+        <div class="stat-lbl">отказов казахстанцам по шенгену за 2024 г. (+13% к 2023). Уровень отказов — <b>8,99%</b></div>
+        <hr style="border:none;border-top:1px solid var(--line);margin:1.3rem 0">
+        <div class="stat" style="color:var(--amber)">€1,3 млн</div>
+        <div class="stat-lbl">потрачено казахстанцами <b>впустую</b> на одни только отклонённые шенген-заявки за год</div>
+      </div>
+    </div>
+    <div class="src">Источник: SchengenVisaInfo — статистика по Казахстану, 2024. schengenvisainfo.com/statistics/kazakhstan</div>
+  </section>
+
+  <!-- 3 · MARKET SIZE / WHY NOW -->
+  <section class="slide dark">
+    <span class="kicker">Почему сейчас</span>
+    <h2><span class="num">02</span>Рынок растёт двузначными темпами</h2>
+    <div class="grid g4">
+      <div class="card"><div class="stat">179k<span class="u"></span></div><div class="stat-lbl">шенген-заявок из Казахстана в 2024 <b>(+12,8%)</b>. 16-е место в мире</div></div>
+      <div class="card"><div class="stat">~12 млн</div><div class="stat-lbl">выездов казахстанцев за рубеж в 2024 <b>(+13,8%)</b></div></div>
+      <div class="card"><div class="stat">~₸5,4 млрд</div><div class="stat-lbl">объём рынка визового оформления в РК: ~179k заявок × средний чек 30 000 ₸ <b>(оценка)</b></div></div>
+      <div class="card"><div class="stat">45 094</div><div class="stat-lbl">заявок в Германию — топ-направление (25% всех)</div></div>
+    </div>
+    <p style="margin-top:2rem;font-size:1.5rem;color:#cbd5e1">Спрос на зарубежные поездки в РК — на <span class="amber">10-летнем максимуме</span>. Люди едут больше — а оформление визы застряло в прошлом.</p>
+    <div class="src">Источники: SchengenVisaInfo (2024); Бюро нацстатистики РК; Qazinform. Ссылки — на слайде «Источники».</div>
+  </section>
+
+  <!-- 4 · THE GAP (online) -->
+  <section class="slide">
+    <h2><span class="num">03</span>Рынок офлайн — окно для digital</h2>
+    <div class="two">
+      <div>
+        <div class="funnel">
+          <div class="row"><div class="bar" style="width:100%;background:var(--mut)">Офлайн-агентства · &gt;90% рынка</div></div>
+          <div class="row"><div class="bar" style="width:10%;background:var(--teal);padding-left:.6rem;font-size:.9rem">онлайн ~6–10%</div></div>
+        </div>
+        <p style="margin-top:1.8rem" class="lead">Более <span class="accent">90%</span> организованного тревела в Казахстане всё ещё проходит через офлайн-агентства. Онлайн-доля — лишь <span class="accent">6–10%</span>.</p>
+      </div>
+      <div>
+        <ul class="clean">
+          <li class="good"><b>92,9%</b> проникновение интернета (19,2 млн юзеров)</li>
+          <li class="good"><b>26,6 млн</b> мобильных подключений — 128% населения</li>
+          <li class="good"><b>15,7 млн</b> в соцсетях; 56% трафика — с телефона</li>
+          <li class="good">Рынок <b>цифровой и готов</b> — но визовый сервис ещё нет</li>
+        </ul>
+      </div>
+    </div>
+    <div class="src">Источники: Ranking.kz — доля онлайна в выездном туризме РК (2024); DataReportal «Digital 2025: Kazakhstan».</div>
+  </section>
+
+  <!-- 5 · SOLUTION -->
+  <section class="slide dark">
+    <span class="kicker">Решение</span>
+    <h2><span class="num">04</span>VisaKZ — визовый сервис нового поколения</h2>
+    <div class="grid g3">
+      <div class="card"><h3>🤖 AI-консультант «Аида»</h3><p>Отвечает 24/7 в WhatsApp и на сайте, подбирает страну, проверяет документы, снижает риск отказа — вместо ручного менеджера.</p></div>
+      <div class="card"><h3>💳 Прозрачные цены онлайн</h3><p>28 стран, фиксированные цены на сайте (8 000–64 000 ₸), на <b>20% ниже рынка</b>. Никаких «уточните по звонку».</p></div>
+      <div class="card"><h3>🛡️ Гарантия результата</h3><p>Оплата по результату и возврат при отказе не по вине клиента. Мы разделяем риск с клиентом.</p></div>
+    </div>
+    <p style="margin-top:2rem;font-size:1.55rem;color:#fff">Весь путь клиента — <span class="amber">от первого вопроса до готовой визы</span> — в одном онлайн-потоке, без визита в офис.</p>
+  </section>
+
+  <!-- 6 · PRODUCT / MVP -->
+  <section class="slide">
+    <span class="mvp-pill" style="margin-bottom:1rem"><span class="live"></span>Уже работает в проде</span>
+    <h2><span class="num">05</span>Продукт: не идея, а живой MVP</h2>
+    <div class="grid g4">
+      <div class="card"><div class="stat">28</div><div class="stat-lbl">стран с ценами и сроками онлайн</div></div>
+      <div class="card"><div class="stat">12</div><div class="stat-lbl">AI-агентов в системе</div></div>
+      <div class="card"><div class="stat">200</div><div class="stat-lbl">сценариев продаж, на которых обучена Аида</div></div>
+      <div class="card"><div class="stat">24/7</div><div class="stat-lbl">приём заявок и консультации — без людей</div></div>
+    </div>
+    <div class="grid g2" style="margin-top:1.4rem">
+      <div class="card"><h3>Что уже задеплоено</h3><p>Лендинг + каталог стран + онлайн-заявка · чат с Аидой · WhatsApp-интеграция · админ-панель (канбан лидов, аналитика) · автоматические cron-сценарии.</p></div>
+      <div class="card"><h3>Стек</h3><p>Next.js + Supabase + Claude API, деплой на Vercel. Построено и поддерживается силами одного технического основателя.</p></div>
+    </div>
+    <div class="src">Демо: https://visa-center-teal.vercel.app</div>
+  </section>
+
+  <!-- 7 · AI MOAT -->
+  <section class="slide dark">
+    <span class="kicker">Технологическое преимущество</span>
+    <h2><span class="num">06</span>AI — это не чат-бот, это команда агентов</h2>
+    <div class="grid g3">
+      <div class="card"><h3>Аида — продажи</h3><p>RAG поверх 146 оценённых диалогов: подтягивает лучшие ответы из реальных симуляций. Консультирует и закрывает на заявку.</p></div>
+      <div class="card"><h3>Скоринг + follow-up</h3><p>Оценивает каждого лида (hot/warm/cold), сам ведёт догоняющие касания — скорость ответа, которую офлайн не даёт.</p></div>
+      <div class="card"><h3>Пост-продажа + контент</h3><p>Апселлы, отзывы, генерация маркетингового контента и видео. Операционка, которая масштабируется без найма.</p></div>
+    </div>
+    <p style="margin-top:2rem;font-size:1.5rem;color:#cbd5e1">Автоматизация труда, который у конкурентов делают люди → <span class="amber">низкий CAC и маржа даже при цене −20%</span>.</p>
+  </section>
+
+  <!-- 8 · COMPETITION -->
+  <section class="slide">
+    <h2><span class="num">07</span>Чем мы отличаемся</h2>
+    <table>
+      <tr><th>Критерий</th><th>Офлайн-агентства</th><th>VisaKZ</th></tr>
+      <tr><td>Цены</td><td class="them">по звонку, непрозрачно</td><td class="us">онлайн, −20% к рынку</td></tr>
+      <tr><td>Консультация</td><td class="them">в часы работы офиса</td><td class="us">AI 24/7, WhatsApp</td></tr>
+      <tr><td>Оценка риска отказа</td><td class="them">нет / на глаз</td><td class="us">AI-предпроверка документов</td></tr>
+      <tr><td>Оплата</td><td class="them">предоплата вслепую</td><td class="us">по результату + возврат при отказе</td></tr>
+      <tr><td>Масштабирование</td><td class="them">= найм людей</td><td class="us">= софт и агенты</td></tr>
+    </table>
+    <p style="margin-top:1.8rem" class="lead">Мы конкурируем не ценой, а <span class="accent">доверием и удобством</span>, которые невозможно скопировать без технологии.</p>
+  </section>
+
+  <!-- 9 · MARKET SIZING -->
+  <section class="slide dark">
+    <span class="kicker">Объём рынка · снизу вверх</span>
+    <h2><span class="num">08</span>Сколько денег в нише</h2>
+    <div class="grid g3">
+      <div class="card"><div class="tag">TAM</div><div class="stat" style="margin-top:.8rem">~12 млн</div><div class="stat-lbl">выездов за рубеж в год — весь тревел-спрос РК, &gt;90% пока офлайн</div></div>
+      <div class="card"><div class="tag">SAM</div><div class="stat" style="margin-top:.8rem">~179k</div><div class="stat-lbl">визовых заявок в год (только шенген) — прямой рынок оформления</div></div>
+      <div class="card"><div class="tag">SOM · 3 года</div><div class="stat" style="margin-top:.8rem">~₸270 млн</div><div class="stat-lbl">при 3% шенген-заявок × средний чек 30 000 ₸ (наш диапазон)</div></div>
+    </div>
+    <p style="margin-top:1.8rem;color:#cbd5e1;font-size:1.25rem">SAM основан на <b>реальном числе заявок</b> (179 446, шенген, 2024) — это нижняя граница: без учёта США, UK, ОАЭ, Кореи и др. SOM — консервативная оценка захвата ниши, где онлайн сегодня почти пуст.</p>
+    <div class="src">Расчёт: реальный объём заявок (SchengenVisaInfo, 2024) × наш средний чек. Помечено как оценка, не факт.</div>
+  </section>
+
+  <!-- 10 · BUSINESS MODEL -->
+  <section class="slide">
+    <h2><span class="num">09</span>Как зарабатываем</h2>
+    <div class="grid g2">
+      <div>
+        <ul class="clean">
+          <li><b>Сервисный сбор за визу</b> — 8 000–64 000 ₸ в зависимости от страны и сложности</li>
+          <li><b>Express-оформление</b> — платный апселл за срочность</li>
+          <li><b>Пост-продажа</b> — страховки, трансферы, повторные визы (работа пост-продажного агента)</li>
+          <li><b>B2B</b> — платформа как сервис для небольших тревел-агентов</li>
+        </ul>
+      </div>
+      <div class="card" style="align-self:center">
+        <h3>Экономика, которую даёт AI</h3>
+        <p style="margin-top:.6rem">Конкуренты платят зарплату менеджерам за каждый диалог. У нас консультацию, скоринг и follow-up делают агенты →</p>
+        <div class="stat" style="margin-top:1rem;color:var(--teal-d)">низкий CAC</div>
+        <div class="stat-lbl">маржинальность сохраняется даже при цене на 20% ниже рынка</div>
+      </div>
+    </div>
+    <div class="src">Цены — фактические, из каталога продукта (28 активных стран).</div>
+  </section>
+
+  <!-- 11 · GTM -->
+  <section class="slide dark">
+    <span class="kicker">Выход на рынок</span>
+    <h2><span class="num">10</span>Go-to-market</h2>
+    <div class="grid g3">
+      <div class="card"><h3>1 · Контент + соцсети</h3><p>TikTok/Instagram/Telegram — там, где 15,7 млн казахстанцев. Контент-агент генерит ролики под конкретные страны и боли.</p></div>
+      <div class="card"><h3>2 · WhatsApp-воронка</h3><p>Заявка → мгновенный ответ Аиды → скоринг → сделка. Скорость реакции, которой нет у офлайна.</p></div>
+      <div class="card"><h3>3 · Реферальная петля</h3><p>Довольный клиент = скидка за приглашение. Виза — событие, которым делятся.</p></div>
+    </div>
+    <p style="margin-top:2rem;font-size:1.45rem;color:#cbd5e1">Дистрибуция цифровая и дешёвая — под рынок, где интернет-проникновение <span class="amber">92,9%</span>.</p>
+  </section>
+
+  <!-- 12 · TRACTION / STATUS -->
+  <section class="slide">
+    <h2><span class="num">11</span>Где мы сейчас — честно</h2>
+    <div class="two">
+      <div>
+        <ul class="clean">
+          <li class="good">MVP <b>задеплоен и работает</b> в проде</li>
+          <li class="good">28 стран, цены, онлайн-заявка, чат — готовы</li>
+          <li class="good">12 AI-агентов; Аида обучена на аудите из 200 сценариев</li>
+          <li><b>Стадия:</b> pre-launch, первых платящих клиентов ещё нет</li>
+        </ul>
+      </div>
+      <div class="card" style="align-self:center">
+        <div class="big-quote" style="font-size:1.7rem;color:var(--navy)">Продукт построен. Теперь задача — <span class="accent">валидация спроса и первые платящие клиенты.</span></div>
+        <p style="margin-top:1.2rem">Именно для этого мы идём в инкубатор — не «допилить идею», а проверить гипотезы на реальном рынке.</p>
+      </div>
+    </div>
+    <div class="src">Прозрачность стадии — осознанная позиция: реальные метрики важнее приукрашенных.</div>
+  </section>
+
+  <!-- 13 · 12-WEEK PLAN -->
+  <section class="slide dark">
+    <span class="kicker">План на программу</span>
+    <h2><span class="num">12</span>Что сделаем за 12 недель инкубации</h2>
+    <div class="grid g3">
+      <div class="card"><h3>Недели 1–4 · Онлайн</h3><p>CustDev-интервью с реальными выезжающими. Проверка гипотез о боли «отказа» и готовности платить онлайн.</p></div>
+      <div class="card"><h3>Недели 5–8 · Офлайн</h3><p>Запуск платного трафика, первые <b>платящие клиенты</b>, замер конверсии воронки Аиды, итерации продукта.</p></div>
+      <div class="card"><h3>Недели 9–12 · Demo Day</h3><p>Отлаженная unit-экономика, повторяемый канал привлечения, готовность к первому раунду / масштабированию.</p></div>
+    </div>
+    <p style="margin-top:2rem;font-size:1.4rem;color:#cbd5e1">Цель к Demo Day: <span class="amber">подтверждённый спрос + первые продажи + доказанный CAC</span>.</p>
+  </section>
+
+  <!-- 14 · TEAM -->
+  <section class="slide">
+    <h2><span class="num">13</span>Команда</h2>
+    <div class="two">
+      <div class="card">
+        <h3>Мирас Бекбаев — Founder</h3>
+        <p style="margin-top:.6rem">Технический основатель. <b>Самостоятельно спроектировал и построил</b> весь продукт: платформу, 12 AI-агентов, интеграции, автоматизацию. Совмещает роли продукта, разработки и продаж.</p>
+      </div>
+      <div>
+        <p class="lead">Solo-founder, который сам довёл продукт до рабочего MVP, — сигнал <span class="accent">скорости и способности исполнять</span>.</p>
+        <p style="margin-top:1.2rem;color:var(--mut);font-size:1.15rem">План найма после валидации: рост/маркетинг и визовый эксперт-операционист. Ищу этих людей в том числе через экосистему Astana Hub.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15 · ASK / CLOSE -->
+  <section class="slide dark">
+    <div class="brand" style="font-size:1.4rem;margin-bottom:1.5rem"><span class="dot"></span> VisaKZ</div>
+    <h1 style="font-size:2.9rem">Оцифровываем рынок, где 90% ещё офлайн — <span style="color:var(--teal)">с AI и гарантией</span></h1>
+    <div class="grid g3" style="margin-top:2.4rem">
+      <div class="card"><h3>Что просим</h3><p>Место в Almaty Hub Incubation, трекинг и доступ к экосистеме для валидации и первых продаж.</p></div>
+      <div class="card"><h3>Почему мы</h3><p>Живой MVP + защищаемая AI-технология + огромный растущий рынок с цифровым вакуумом.</p></div>
+      <div class="card"><h3>Контакт</h3><p>Мирас Бекбаев<br>bekbayevmiras@gmail.com<br>visa-center-teal.vercel.app</p></div>
+    </div>
+    <p style="margin-top:2.2rem;font-size:1.3rem;color:#94a3b8">Спасибо. Готов к вопросам.</p>
+  </section>
+
+  <!-- 16 · SOURCES -->
+  <section class="slide">
+    <h2><span class="num">14</span>Источники данных</h2>
+    <div class="grid g2" style="gap:.6rem">
+      <p style="font-size:1rem;color:var(--mut)">1. <b>SchengenVisaInfo</b> — статистика заявок и отказов по Казахстану, 2024: 179 446 заявок (+12,8%), 8,99% отказов, €14,3 млн сборов. schengenvisainfo.com/statistics/kazakhstan</p>
+      <p style="font-size:1rem;color:var(--mut)">2. <b>Qazinform</b> — Казахстан 16-й в мире по числу шенген-заявок (2024). qazinform.com</p>
+      <p style="font-size:1rem;color:var(--mut)">3. <b>Бюро нацстатистики РК</b> (via Tourcode.kz / Inform.kz) — ~12 млн выездов за рубеж, +13,8% (2024).</p>
+      <p style="font-size:1rem;color:var(--mut)">4. <b>Ranking.kz</b> — доля онлайна в выездном туризме РК: офлайн-агентства &gt;90%, онлайн ~6–10% (2024).</p>
+      <p style="font-size:1rem;color:var(--mut)">5. <b>DataReportal</b> — «Digital 2025: Kazakhstan»: интернет 92,9% (19,2 млн), 26,6 млн моб., 15,7 млн соцсети. datareportal.com/reports/digital-2025-kazakhstan</p>
+      <p style="font-size:1rem;color:var(--mut)">6. <b>Каталог продукта VisaKZ</b> — 28 стран, цены 8 000–64 000 ₸ (фактические данные платформы).</p>
+    </div>
+    <div class="src">Все рыночные цифры — из публичных проверяемых источников (2024–2025). Оценки TAM/SAM/SOM явно помечены как расчётные.</div>
+  </section>
+
+</div>
+
+<div class="progress" id="progress"></div>
+<div class="dots" id="dots"></div>
+<div class="hint">← → · F — полный экран · P — печать/PDF</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  let i=0;
+  const dots=document.getElementById('dots');
+  slides.forEach((_,n)=>{const d=document.createElement('i');d.onclick=()=>go(n);dots.appendChild(d)});
+  const dEls=[...dots.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+    dEls.forEach((d,k)=>d.classList.toggle('on',k===i));
+    document.getElementById('progress').style.width=((i+1)/slides.length*100)+'%';
+  }
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown')go(i+1);
+    else if(e.key==='ArrowLeft'||e.key==='PageUp')go(i-1);
+    else if(e.key==='Home')go(0);
+    else if(e.key==='End')go(slides.length-1);
+    else if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}
+    else if(e.key==='p'||e.key==='P'){window.print()}
+  });
+  let sx=0;
+  document.addEventListener('touchstart',e=>sx=e.touches[0].clientX);
+  document.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)go(dx<0?i+1:i-1)});
+  go(0);
+</script>
+</body>
+</html>
